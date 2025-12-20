@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "sveltekit",
+  "framework": null,
   "installCommand": "cd ../.. && corepack enable pnpm && pnpm install",
   "buildCommand": "cd ../.. && pnpm turbo build --filter=@starbound-mmo/web",
   "outputDirectory": ".vercel/output"
