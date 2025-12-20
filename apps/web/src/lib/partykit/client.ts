@@ -2,7 +2,11 @@ import PartySocket from 'partysocket'
 import { writable, type Readable } from 'svelte/store'
 import type { MarketListingWithSeller } from '@starbound-mmo/shared'
 
-const PARTYKIT_HOST = import.meta.env.VITE_PARTYKIT_HOST || 'localhost:1999'
+const PARTYKIT_HOST =
+  import.meta.env.VITE_PARTYKIT_HOST ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'starbound-mmo.pxperfectmike.partykit.dev'
+    : 'localhost:1999')
 
 // Market connection
 export function createMarketConnection() {
