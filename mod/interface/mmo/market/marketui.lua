@@ -1,5 +1,5 @@
-require "/scripts/mmo/bridge.lua"
-require "/scripts/mmo/market.lua"
+local bridge = require "/scripts/mmo/bridge.lua"
+local market = require "/scripts/mmo/market.lua"
 
 local currentTab = 0
 local listings = {}
@@ -45,6 +45,23 @@ function updateCurrencyDisplay()
   widget.setText("currencyLabel", string.format("Balance: ^orange;%d CR^reset;", currency))
 end
 
+-- Tab button callbacks
+function onTabBrowse()
+  switchTab(0)
+end
+
+function onTabSell()
+  switchTab(1)
+end
+
+function onTabMy()
+  switchTab(2)
+end
+
+function onTabPending()
+  switchTab(3)
+end
+
 function switchTab(tabId)
   currentTab = tabId
 
@@ -53,19 +70,19 @@ function switchTab(tabId)
   if tabId == 0 then
     -- Browse tab
     displayListings(listings, true)
-    widget.setText("statusLabel", string.format("%d listings available", #listings))
+    widget.setText("statusLabel", string.format("%d listings", #listings))
   elseif tabId == 1 then
     -- Sell tab (create listing)
     displaySellInterface()
-    widget.setText("statusLabel", "Select an item to sell")
+    widget.setText("statusLabel", "Select item to sell")
   elseif tabId == 2 then
     -- My Listings tab
     displayListings(myListings, false)
-    widget.setText("statusLabel", string.format("%d active listings", #myListings))
+    widget.setText("statusLabel", string.format("%d active", #myListings))
   elseif tabId == 3 then
     -- Pending Items tab
     displayPendingItems()
-    widget.setText("statusLabel", string.format("%d items to claim", #pendingItems))
+    widget.setText("statusLabel", string.format("%d to claim", #pendingItems))
   end
 end
 
@@ -184,12 +201,4 @@ end
 function onCreateListing()
   -- Would open a sub-dialog for creating listings
   widget.setText("statusLabel", "Select item from inventory to list")
-end
-
--- Handle tab changes via radio group
-function widgetUpdate()
-  local newTab = widget.getSelectedOption("tabGroup")
-  if newTab ~= currentTab then
-    switchTab(newTab)
-  end
 end

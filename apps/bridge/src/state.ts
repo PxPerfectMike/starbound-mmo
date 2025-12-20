@@ -92,8 +92,9 @@ export function createStateWriter(bridgeDir: string): StateWriter {
   }
 
   async function writeMarketCache(listings: unknown[]): Promise<void> {
-    const filePath = join(cacheDir, 'market_listings.json')
-    await ensureDir(filePath)
+    // Write to market.json (matches what Lua expects)
+    const filePath = join(cacheDir, 'market.json')
+    await mkdir(cacheDir, { recursive: true })
     await writeFile(
       filePath,
       JSON.stringify(

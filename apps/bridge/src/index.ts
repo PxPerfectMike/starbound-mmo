@@ -1,4 +1,6 @@
 import 'dotenv/config'
+import { mkdir } from 'fs/promises'
+import { join } from 'path'
 import { createWatcher } from './watcher.js'
 import { createPartyKitClient } from './partykit.js'
 import { createCommandRouter } from './router.js'
@@ -18,16 +20,45 @@ function getRequiredEnv(name: string): string {
 
 const DATABASE_URL = getRequiredEnv('DATABASE_URL')
 
+async function ensureBridgeDirectories(bridgeDir: string) {
+  const dirs = ['commands', 'state', 'cache']
+  for (const dir of dirs) {
+    await mkdir(join(bridgeDir, dir), { recursive: true })
+  }
+  console.log('Bridge directories ready')
+}
+
 async function main() {
   console.log('Starting Starbound MMO Bridge Service...')
   console.log(`Bridge directory: ${BRIDGE_DIR}`)
   console.log(`PartyKit host: ${PARTYKIT_HOST}`)
+
+  // Ensure bridge directories exist
+  await ensureBridgeDirectories(BRIDGE_DIR)
 
   // Initialize components
   const stateWriter = createStateWriter(BRIDGE_DIR)
   const partykit = createPartyKitClient(PARTYKIT_HOST)
   const router = createCommandRouter(DATABASE_URL, partykit, stateWriter)
   const watcher = createWatcher(BRIDGE_DIR, router)
+
+  // Subscribe to market updates to write cache files
+  partykit.onMarketMessage(async (data: unknown) => {
+    const message = data as { type: string; listings?: unknown[] }
+
+    if (message.type === 'sync' && message.listings) {
+      // Initial sync - write all listings to cache
+      await stateWriter.writeMarketCache(message.listings)
+      console.log(`Market cache updated: ${message.listings.length} listings`)
+    } else if (
+      message.type === 'listing_added' ||
+      message.type === 'listing_removed' ||
+      message.type === 'listing_sold'
+    ) {
+      // Request fresh sync after any change
+      partykit.sendToMarket({ type: 'refresh' })
+    }
+  })
 
   // Connect to PartyKit rooms
   await partykit.connect()
