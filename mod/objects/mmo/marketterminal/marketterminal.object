@@ -1,0 +1,46 @@
+{
+  "objectName": "mmo_marketterminal",
+  "colonyTags": ["commerce", "electronic"],
+  "rarity": "Legendary",
+  "category": "wire",
+  "price": 0,
+  "printable": false,
+
+  "description": "Access the global MMO market to buy and sell items.",
+  "shortdescription": "^orange;MMO Market Terminal^reset;",
+  "race": "generic",
+
+  "apexDescription": "A terminal connected to the galaxy-wide market.",
+  "avianDescription": "Through this device, traders across the stars exchange goods.",
+  "floranDescription": "Floran can buy and sssell things here!",
+  "glitchDescription": "Impressed. A sophisticated trading network.",
+  "humanDescription": "An intergalactic marketplace at my fingertips.",
+  "hylotlDescription": "Commerce flows like water through this terminal.",
+  "novakidDescription": "Time to make some deals!",
+
+  "inventoryIcon": "marketterminalicon.png",
+  "orientations": [
+    {
+      "imageLayers": [
+        { "image": "marketterminal.png:<color>.<frame>", "fullbright": true }
+      ],
+      "imagePosition": [-16, 0],
+      "frames": 4,
+      "animationCycle": 0.5,
+
+      "spaceScan": 0.1,
+      "anchors": ["bottom"]
+    }
+  ],
+
+  "animation": "/objects/mmo/marketterminal/marketterminal.animation",
+  "animationParts": {
+    "terminal": "marketterminal.png"
+  },
+
+  "scripts": ["/objects/mmo/marketterminal/marketterminal.lua"],
+  "scriptDelta": 20,
+
+  "interactAction": "ScriptPane",
+  "interactData": "/interface/mmo/market/marketui.config"
+}

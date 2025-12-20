@@ -1,0 +1,26 @@
+{
+  "name": "@starbound-mmo/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+  },
+  "dependencies": {
+    "@starbound-mmo/shared": "workspace:*",
+    "partysocket": "^1.0.2"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-vercel": "^5.4.6",
+    "@sveltejs/kit": "^2.11.1",
+    "@sveltejs/vite-plugin-svelte": "^4.0.3",
+    "svelte": "^5.14.1",
+    "svelte-check": "^4.1.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  }
+}

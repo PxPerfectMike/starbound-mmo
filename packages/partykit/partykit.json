@@ -1,0 +1,9 @@
+{
+  "name": "starbound-mmo",
+  "main": "src/index.ts",
+  "parties": {
+    "market": "src/market.ts",
+    "faction": "src/faction.ts",
+    "presence": "src/presence.ts"
+  }
+}

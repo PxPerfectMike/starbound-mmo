@@ -1,0 +1,23 @@
+{
+  "name": "@starbound-mmo/partykit",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "partykit dev",
+    "deploy": "partykit deploy",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@starbound-mmo/db": "workspace:*",
+    "@starbound-mmo/shared": "workspace:*",
+    "drizzle-orm": "^0.38.3",
+    "partysocket": "^1.0.2"
+  },
+  "devDependencies": {
+    "partykit": "^0.0.111",
+    "typescript": "^5.7.2"
+  }
+}

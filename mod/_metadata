@@ -1,0 +1,13 @@
+{
+  "name": "Starbound MMO",
+  "friendlyName": "Starbound MMO Layer",
+  "description": "Adds MMO features to Starbound including a global market, factions, and shared zones.",
+  "author": "Starbound MMO Team",
+  "version": "0.1.0",
+  "link": "",
+  "steamContentId": "",
+  "tags": "",
+  "includes": [],
+  "requires": [],
+  "priority": 0
+}

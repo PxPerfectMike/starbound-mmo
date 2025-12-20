@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.svelte-kit/
+.vercel/
+.turbo/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Starbound mod builds
+mod/*.pak
+
+# Bridge runtime
+server/mmo_bridge/commands/*
+server/mmo_bridge/state/*
+server/mmo_bridge/cache/*
+!server/mmo_bridge/commands/.gitkeep
+!server/mmo_bridge/state/.gitkeep
+!server/mmo_bridge/cache/.gitkeep
