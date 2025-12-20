@@ -4,7 +4,7 @@
   import { CURRENCY_SYMBOL } from '@starbound-mmo/shared'
 
   const market = createMarketConnection()
-  const { listings, connected, error } = market
+  const { listings, status, error } = market
 
   let searchQuery = $state('')
   let sortBy = $state<'newest' | 'price_low' | 'price_high'>('newest')
@@ -60,15 +60,17 @@
   <header class="page-header">
     <h1>Global Market</h1>
     <div class="connection-status">
-      {#if $connected}
+      {#if $status === 'connected'}
         <span class="badge badge-success">Connected</span>
+      {:else if $status === 'connecting'}
+        <span class="badge badge-warning">Connecting...</span>
       {:else}
         <span class="badge badge-error">Disconnected</span>
       {/if}
     </div>
   </header>
 
-  {#if $error}
+  {#if $status === 'error' && $error}
     <div class="alert alert-error">{$error}</div>
   {/if}
 
@@ -120,10 +122,12 @@
       </div>
     {:else}
       <div class="empty-state">
-        {#if $connected}
+        {#if $status === 'connected'}
           <p>No listings found. The market is empty or no items match your search.</p>
-        {:else}
+        {:else if $status === 'connecting'}
           <p>Connecting to market...</p>
+        {:else}
+          <p>Unable to load listings. Please try again.</p>
         {/if}
       </div>
     {/each}

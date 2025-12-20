@@ -11,12 +11,17 @@ const PARTYKIT_HOST =
 // Market connection
 export function createMarketConnection() {
   const listings = writable<MarketListingWithSeller[]>([])
-  const connected = writable(false)
+  const status = writable<'connecting' | 'connected' | 'error'>('connecting')
   const error = writable<string | null>(null)
 
   let socket: PartySocket | null = null
+  let retryCount = 0
+  const MAX_RETRIES = 3
 
   function connect() {
+    status.set('connecting')
+    error.set(null)
+
     socket = new PartySocket({
       host: PARTYKIT_HOST,
       room: 'market',
@@ -24,17 +29,26 @@ export function createMarketConnection() {
     })
 
     socket.addEventListener('open', () => {
-      connected.set(true)
+      status.set('connected')
       error.set(null)
+      retryCount = 0
     })
 
     socket.addEventListener('close', () => {
-      connected.set(false)
+      if (retryCount < MAX_RETRIES) {
+        status.set('connecting')
+      } else {
+        status.set('error')
+        error.set('Unable to connect to market')
+      }
     })
 
-    socket.addEventListener('error', (e) => {
-      error.set('Connection error')
-      console.error('PartyKit error:', e)
+    socket.addEventListener('error', () => {
+      retryCount++
+      if (retryCount >= MAX_RETRIES) {
+        status.set('error')
+        error.set('Connection failed after multiple attempts')
+      }
     })
 
     socket.addEventListener('message', (event) => {
@@ -108,7 +122,7 @@ export function createMarketConnection() {
 
   return {
     listings: listings as Readable<MarketListingWithSeller[]>,
-    connected: connected as Readable<boolean>,
+    status: status as Readable<'connecting' | 'connected' | 'error'>,
     error: error as Readable<string | null>,
     connect,
     disconnect,
