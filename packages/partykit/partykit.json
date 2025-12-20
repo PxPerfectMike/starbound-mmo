@@ -1,6 +1,7 @@
 {
   "name": "starbound-mmo",
   "main": "src/index.ts",
+  "compatibilityDate": "2025-12-20",
   "parties": {
     "market": "src/market.ts",
     "faction": "src/faction.ts",
