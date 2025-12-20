@@ -6,12 +6,17 @@ import { createStateWriter } from './state.js'
 
 const BRIDGE_DIR = process.env.BRIDGE_DIR || './mmo_bridge'
 const PARTYKIT_HOST = process.env.PARTYKIT_HOST || 'localhost:1999'
-const DATABASE_URL = process.env.DATABASE_URL
 
-if (!DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is required')
-  process.exit(1)
+function getRequiredEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) {
+    console.error(`${name} environment variable is required`)
+    process.exit(1)
+  }
+  return value
 }
+
+const DATABASE_URL = getRequiredEnv('DATABASE_URL')
 
 async function main() {
   console.log('Starting Starbound MMO Bridge Service...')

@@ -1,4 +1,4 @@
-import chokidar from 'chokidar'
+import chokidar, { type FSWatcher } from 'chokidar'
 import { readFile, unlink, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { validateCommand, type CommandType } from '@starbound-mmo/shared'
@@ -15,7 +15,7 @@ export interface CommandRouter {
 
 export function createWatcher(bridgeDir: string, router: CommandRouter) {
   const commandsDir = join(bridgeDir, 'commands')
-  let watcher: chokidar.FSWatcher | null = null
+  let watcher: FSWatcher | null = null
 
   async function ensureDirectories() {
     await mkdir(join(bridgeDir, 'commands'), { recursive: true })
@@ -70,11 +70,11 @@ export function createWatcher(bridgeDir: string, router: CommandRouter) {
         },
       })
 
-      watcher.on('add', (filePath) => {
+      watcher.on('add', (filePath: string) => {
         processCommandFile(filePath)
       })
 
-      watcher.on('error', (error) => {
+      watcher.on('error', (error: Error) => {
         console.error('Watcher error:', error)
       })
 
