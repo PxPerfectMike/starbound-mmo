@@ -74,7 +74,7 @@ export function createWatcher(bridgeDir: string, router: CommandRouter) {
         processCommandFile(filePath)
       })
 
-      watcher.on('error', (error: Error) => {
+      watcher.on('error', (error: unknown) => {
         console.error('Watcher error:', error)
       })
 
