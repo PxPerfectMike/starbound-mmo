@@ -3,5 +3,8 @@
   "framework": null,
   "installCommand": "corepack enable pnpm && pnpm install",
   "buildCommand": "pnpm turbo build --filter=@starbound-mmo/web",
-  "outputDirectory": "apps/web/public"
+  "outputDirectory": "apps/web/public",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
