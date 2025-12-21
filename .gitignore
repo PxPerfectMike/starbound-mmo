@@ -34,9 +34,5 @@ coverage/
 mod/*.pak
 
 # Bridge runtime
-server/mmo_bridge/commands/*
-server/mmo_bridge/state/*
-server/mmo_bridge/cache/*
-!server/mmo_bridge/commands/.gitkeep
-!server/mmo_bridge/state/.gitkeep
-!server/mmo_bridge/cache/.gitkeep
+server/mmo_bridge/
+apps/bridge/mmo_bridge/
