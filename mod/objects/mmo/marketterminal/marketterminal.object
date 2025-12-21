@@ -2,11 +2,11 @@
   "objectName": "mmo_marketterminal",
   "colonyTags": ["commerce", "electronic"],
   "rarity": "Legendary",
-  "category": "wire",
+  "category": "decorative",
   "price": 0,
   "printable": false,
 
-  "description": "Access the global MMO market to buy and sell items.",
+  "description": "Access the global MMO market to buy and sell items across the galaxy.",
   "shortdescription": "^orange;MMO Market Terminal^reset;",
   "race": "generic",
 
@@ -18,18 +18,18 @@
   "hylotlDescription": "Commerce flows like water through this terminal.",
   "novakidDescription": "Time to make some deals!",
 
-  "inventoryIcon": "/objects/outpost/outpostbutton/outpostbuttonicon.png",
+  "inventoryIcon": "marketterminalicon.png",
+
   "orientations": [
     {
-      "imageLayers": [
-        { "image": "/objects/outpost/outpostbutton/outpostbutton.png:off", "fullbright": true }
-      ],
+      "dualImage": "marketterminal.png",
       "imagePosition": [-8, 0],
       "spaceScan": 0.1,
       "anchors": ["bottom"]
     }
   ],
 
-  "scripts": ["/objects/mmo/marketterminal/marketterminal.lua"],
-  "scriptDelta": 20
+  "interactive": true,
+  "interactAction": "ScriptPane",
+  "interactData": "/interface/mmo/market/market.config"
 }
