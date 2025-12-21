@@ -3,9 +3,9 @@ import { join, dirname } from 'path'
 import type { PlayerState, PendingItem, Notification } from '@starbound-mmo/shared'
 
 export interface StateWriter {
-  writePlayerState(playerId: string, state: Partial<PlayerState>): Promise<void>
-  addPlayerNotification(playerId: string, notification: Notification): Promise<void>
-  addPlayerPendingItem(playerId: string, item: PendingItem): Promise<void>
+  writePlayerState(playerId: string, starboundId: string, state: Partial<PlayerState>): Promise<void>
+  addPlayerNotification(playerId: string, starboundId: string, notification: Notification): Promise<void>
+  addPlayerPendingItem(playerId: string, starboundId: string, item: PendingItem): Promise<void>
   writeMarketCache(listings: unknown[]): Promise<void>
 }
 
@@ -22,7 +22,7 @@ export function createStateWriter(bridgeDir: string, modDir?: string): StateWrit
     await mkdir(dirname(dir), { recursive: true })
   }
 
-  async function writePlayerState(playerId: string, updates: Partial<PlayerState>): Promise<void> {
+  async function writePlayerState(playerId: string, starboundId: string, updates: Partial<PlayerState>): Promise<void> {
     // Get or create player state
     let state = playerStates.get(playerId)
     if (!state) {
@@ -41,14 +41,23 @@ export function createStateWriter(bridgeDir: string, modDir?: string): StateWrit
     state = { ...state, ...updates }
     playerStates.set(playerId, state)
 
-    // Write to file
+    const stateJson = JSON.stringify(state, null, 2)
+
+    // Write to bridge state directory
     const filePath = join(stateDir, `player_${playerId}.json`)
     await ensureDir(filePath)
-    await writeFile(filePath, JSON.stringify(state, null, 2))
-    console.log(`Updated state for player ${playerId}`)
+    await writeFile(filePath, stateJson)
+
+    // Also write to mod folder using starboundId so Lua can read it
+    if (modCacheDir) {
+      const modStatePath = join(modCacheDir, `player_${starboundId}.json`)
+      await mkdir(modCacheDir, { recursive: true })
+      await writeFile(modStatePath, stateJson)
+      console.log(`Player state written for ${starboundId}`)
+    }
   }
 
-  async function addPlayerNotification(playerId: string, notification: Notification): Promise<void> {
+  async function addPlayerNotification(playerId: string, starboundId: string, notification: Notification): Promise<void> {
     let state = playerStates.get(playerId)
     if (!state) {
       state = {
@@ -66,12 +75,20 @@ export function createStateWriter(bridgeDir: string, modDir?: string): StateWrit
     state.notifications = [notification, ...state.notifications].slice(0, 20)
     playerStates.set(playerId, state)
 
+    const stateJson = JSON.stringify(state, null, 2)
     const filePath = join(stateDir, `player_${playerId}.json`)
     await ensureDir(filePath)
-    await writeFile(filePath, JSON.stringify(state, null, 2))
+    await writeFile(filePath, stateJson)
+
+    // Also write to mod folder
+    if (modCacheDir) {
+      const modStatePath = join(modCacheDir, `player_${starboundId}.json`)
+      await mkdir(modCacheDir, { recursive: true })
+      await writeFile(modStatePath, stateJson)
+    }
   }
 
-  async function addPlayerPendingItem(playerId: string, item: PendingItem): Promise<void> {
+  async function addPlayerPendingItem(playerId: string, starboundId: string, item: PendingItem): Promise<void> {
     let state = playerStates.get(playerId)
     if (!state) {
       state = {
@@ -88,9 +105,17 @@ export function createStateWriter(bridgeDir: string, modDir?: string): StateWrit
     state.pendingItems.push(item)
     playerStates.set(playerId, state)
 
+    const stateJson = JSON.stringify(state, null, 2)
     const filePath = join(stateDir, `player_${playerId}.json`)
     await ensureDir(filePath)
-    await writeFile(filePath, JSON.stringify(state, null, 2))
+    await writeFile(filePath, stateJson)
+
+    // Also write to mod folder
+    if (modCacheDir) {
+      const modStatePath = join(modCacheDir, `player_${starboundId}.json`)
+      await mkdir(modCacheDir, { recursive: true })
+      await writeFile(modStatePath, stateJson)
+    }
   }
 
   async function writeMarketCache(listings: unknown[]): Promise<void> {

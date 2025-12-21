@@ -97,8 +97,8 @@ export function createCommandRouter(
       where: eq(pendingItems.playerId, player.id),
     })
 
-    // Write player state file
-    await stateWriter.writePlayerState(player.id, {
+    // Write player state file (use starboundId so Lua can read it)
+    await stateWriter.writePlayerState(player.id, data.starboundId, {
       id: player.id,
       displayName: player.displayName,
       currency: player.currency,
