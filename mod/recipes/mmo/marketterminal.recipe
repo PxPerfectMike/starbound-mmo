@@ -1,0 +1,11 @@
+{
+  "input": [
+    { "item": "ironbar", "count": 5 },
+    { "item": "glass", "count": 2 }
+  ],
+  "output": {
+    "item": "mmo_marketterminal",
+    "count": 1
+  },
+  "groups": ["craftingtable", "objects", "all"]
+}

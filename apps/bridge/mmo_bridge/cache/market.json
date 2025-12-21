@@ -1,0 +1,101 @@
+{
+  "updatedAt": "2025-12-21T00:06:59.080Z",
+  "listings": [
+    {
+      "id": "94add5b8-c8d7-49f8-9367-6b31f021f1d8",
+      "sellerId": "de17decc-5b11-4c14-a075-6acb381f7d19",
+      "itemName": "Refined Aegisalt",
+      "itemCount": 50,
+      "itemParams": {},
+      "pricePerUnit": 25,
+      "totalPrice": 1250,
+      "status": "active",
+      "createdAt": "2025-12-20T12:52:31.226Z",
+      "expiresAt": "2025-12-27T12:52:31.105Z",
+      "seller": {
+        "id": "de17decc-5b11-4c14-a075-6acb381f7d19",
+        "displayName": "SpaceCaptain"
+      }
+    },
+    {
+      "id": "cdbae633-6aad-49e6-9479-fceb99ad5f53",
+      "sellerId": "de17decc-5b11-4c14-a075-6acb381f7d19",
+      "itemName": "Diamond",
+      "itemCount": 10,
+      "itemParams": {},
+      "pricePerUnit": 500,
+      "totalPrice": 5000,
+      "status": "active",
+      "createdAt": "2025-12-20T12:52:31.226Z",
+      "expiresAt": "2025-12-27T12:52:31.105Z",
+      "seller": {
+        "id": "de17decc-5b11-4c14-a075-6acb381f7d19",
+        "displayName": "SpaceCaptain"
+      }
+    },
+    {
+      "id": "ca254546-8daa-4c64-b6e0-3141557a6850",
+      "sellerId": "8045f56e-8b46-4d2e-a688-9ab482f986a8",
+      "itemName": "Fuel Cell",
+      "itemCount": 100,
+      "itemParams": {},
+      "pricePerUnit": 15,
+      "totalPrice": 1500,
+      "status": "active",
+      "createdAt": "2025-12-20T12:52:31.226Z",
+      "expiresAt": "2025-12-27T12:52:31.105Z",
+      "seller": {
+        "id": "8045f56e-8b46-4d2e-a688-9ab482f986a8",
+        "displayName": "StarTrader"
+      }
+    },
+    {
+      "id": "cdd566e6-8515-45e3-a04f-b5bf4cc08a45",
+      "sellerId": "8045f56e-8b46-4d2e-a688-9ab482f986a8",
+      "itemName": "Titanium Bar",
+      "itemCount": 200,
+      "itemParams": {},
+      "pricePerUnit": 8,
+      "totalPrice": 1600,
+      "status": "active",
+      "createdAt": "2025-12-20T12:52:31.226Z",
+      "expiresAt": "2025-12-27T12:52:31.105Z",
+      "seller": {
+        "id": "8045f56e-8b46-4d2e-a688-9ab482f986a8",
+        "displayName": "StarTrader"
+      }
+    },
+    {
+      "id": "66c3d48b-8412-4e88-be2f-860e07cdca46",
+      "sellerId": "173ab5a2-3ac1-4cb7-a0f9-2c296a889ac9",
+      "itemName": "Solarium Star",
+      "itemCount": 5,
+      "itemParams": {},
+      "pricePerUnit": 1000,
+      "totalPrice": 5000,
+      "status": "active",
+      "createdAt": "2025-12-20T12:52:31.226Z",
+      "expiresAt": "2025-12-27T12:52:31.105Z",
+      "seller": {
+        "id": "173ab5a2-3ac1-4cb7-a0f9-2c296a889ac9",
+        "displayName": "NovaMiner"
+      }
+    },
+    {
+      "id": "1bb90de2-d0d7-4fed-8b4f-2c0734c4a7bf",
+      "sellerId": "173ab5a2-3ac1-4cb7-a0f9-2c296a889ac9",
+      "itemName": "Core Fragment",
+      "itemCount": 25,
+      "itemParams": {},
+      "pricePerUnit": 40,
+      "totalPrice": 1000,
+      "status": "active",
+      "createdAt": "2025-12-20T12:52:31.226Z",
+      "expiresAt": "2025-12-27T12:52:31.105Z",
+      "seller": {
+        "id": "173ab5a2-3ac1-4cb7-a0f9-2c296a889ac9",
+        "displayName": "NovaMiner"
+      }
+    }
+  ]
+}
