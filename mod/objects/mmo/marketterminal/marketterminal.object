@@ -29,6 +29,9 @@
     }
   ],
 
+  "scripts": ["/objects/mmo/marketterminal/marketterminal.lua"],
+  "scriptDelta": 60,
+
   "interactive": true,
   "interactAction": "ScriptPane",
   "interactData": "/interface/mmo/market/market.config"

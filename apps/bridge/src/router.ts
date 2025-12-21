@@ -144,6 +144,7 @@ export function createCommandRouter(
   }
 
   async function handleMarketPurchase(command: ValidatedCommand<'market_purchase'>) {
+    console.log(`[Router] Processing market purchase: listing ${command.data.listingId} by player ${command.playerId}`)
     partykit.sendToMarket({
       type: 'purchase',
       playerId: command.playerId,
@@ -206,12 +207,114 @@ export function createCommandRouter(
 
   // Subscribe to market updates to sync player states
   partykit.onMarketMessage(async (data: unknown) => {
-    const message = data as { type: string; [key: string]: unknown }
+    const message = data as {
+      type: string
+      listing?: {
+        id: string
+        sellerId: string
+        itemName: string
+        itemCount: number
+        itemParams: Record<string, unknown>
+        totalPrice: number
+      }
+      newBalance?: number
+      buyerId?: string
+    }
 
-    if (message.type === 'listing_sold' || message.type === 'purchase_complete') {
-      // Update player currency in state files
-      // This would need more sophisticated handling in production
-      console.log('Market transaction completed, updating player states')
+    if (message.type === 'purchase_complete' && message.listing) {
+      console.log('Purchase complete, updating buyer state')
+
+      // Find the buyer - we need to look up by the listing that was just sold
+      // The purchase was initiated by a command, so we need to refresh buyer data
+      try {
+        // Get all players and find the one who just bought (has pending item for this listing)
+        const allPendingItems = await db.query.pendingItems.findMany({
+          where: eq(pendingItems.itemName, message.listing.itemName),
+          with: { player: true },
+          orderBy: (items, { desc }) => [desc(items.createdAt)],
+          limit: 1,
+        })
+
+        if (allPendingItems.length > 0) {
+          const pending = allPendingItems[0]
+          const buyer = pending.player
+
+          // Get all pending items for this buyer
+          const buyerPendingItems = await db.query.pendingItems.findMany({
+            where: eq(pendingItems.playerId, buyer.id),
+          })
+
+          // Write updated player state
+          await stateWriter.writePlayerState(buyer.id, buyer.starboundId, {
+            id: buyer.id,
+            displayName: buyer.displayName,
+            currency: buyer.currency,
+            factionId: buyer.factionId,
+            factionTag: null,
+            pendingItems: buyerPendingItems.map((p) => ({
+              id: p.id,
+              itemName: p.itemName,
+              itemCount: p.itemCount,
+              itemParams: p.itemParams as Record<string, unknown>,
+              source: p.source as 'market_purchase' | 'market_return' | 'event_reward',
+              createdAt: p.createdAt.toISOString(),
+            })),
+            notifications: [{
+              id: `purchase-${message.listing.id}`,
+              type: 'market_purchase',
+              message: `Purchased ${message.listing.itemCount}x ${message.listing.itemName}`,
+              createdAt: new Date().toISOString(),
+            }],
+          })
+
+          console.log(`Updated buyer state for ${buyer.displayName}: ${buyer.currency} CR, ${buyerPendingItems.length} pending items`)
+        }
+      } catch (error) {
+        console.error('Error updating buyer state:', error)
+      }
+    }
+
+    if (message.type === 'listing_sold' && message.listing) {
+      console.log('Listing sold, updating seller state')
+
+      try {
+        // Update seller state
+        const seller = await db.query.players.findFirst({
+          where: eq(players.id, message.listing.sellerId),
+        })
+
+        if (seller) {
+          const sellerPendingItems = await db.query.pendingItems.findMany({
+            where: eq(pendingItems.playerId, seller.id),
+          })
+
+          await stateWriter.writePlayerState(seller.id, seller.starboundId, {
+            id: seller.id,
+            displayName: seller.displayName,
+            currency: seller.currency,
+            factionId: seller.factionId,
+            factionTag: null,
+            pendingItems: sellerPendingItems.map((p) => ({
+              id: p.id,
+              itemName: p.itemName,
+              itemCount: p.itemCount,
+              itemParams: p.itemParams as Record<string, unknown>,
+              source: p.source as 'market_purchase' | 'market_return' | 'event_reward',
+              createdAt: p.createdAt.toISOString(),
+            })),
+            notifications: [{
+              id: `sale-${message.listing.id}`,
+              type: 'market_sale',
+              message: `Sold ${message.listing.itemCount}x ${message.listing.itemName} for ${message.listing.totalPrice} CR`,
+              createdAt: new Date().toISOString(),
+            }],
+          })
+
+          console.log(`Updated seller state for ${seller.displayName}: ${seller.currency} CR`)
+        }
+      } catch (error) {
+        console.error('Error updating seller state:', error)
+      }
     }
   })
 

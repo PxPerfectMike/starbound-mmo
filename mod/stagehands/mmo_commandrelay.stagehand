@@ -1,0 +1,6 @@
+{
+  "type": "mmo_commandrelay",
+  "scripts": ["/stagehands/mmo_commandrelay.lua"],
+  "scriptDelta": 10,
+  "keepAlive": true
+}

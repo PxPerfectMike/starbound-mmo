@@ -1,9 +1,6 @@
 -- Starbound MMO Market UI
 -- Handles player identity, market listings, and purchases
 
--- Bridge command directory (relative to Starbound installation)
-local COMMANDS_DIR = "../mmo_bridge/commands/"
-
 -- Fallback static listings if cache can't be read
 local STATIC_LISTINGS = {
   { id = "static-1", itemName = "Refined Aegisalt", itemCount = 50, totalPrice = 1250, seller = { displayName = "SpaceCaptain" } },
@@ -21,11 +18,42 @@ local starboundId = nil
 local playerName = nil
 local dataSource = "static"
 local playerStateLoaded = false
-local commandsWritten = {}
+local terminalEntityId = nil
 
 -- Generate a simple unique ID
 local function generateId()
   return tostring(os.time()) .. "_" .. tostring(math.random(10000, 99999))
+end
+
+-- Send command via the terminal object that opened this pane
+local function sendViaTerminal(command)
+  -- Get the terminal entity that opened this ScriptPane
+  if not terminalEntityId then
+    terminalEntityId = pane.sourceEntity()
+    if terminalEntityId then
+      sb.logInfo("[MMO Market] Connected to terminal: " .. tostring(terminalEntityId))
+    end
+  end
+
+  if not terminalEntityId then
+    sb.logWarn("[MMO Market] No terminal entity found")
+    return false
+  end
+
+  local result = world.sendEntityMessage(terminalEntityId, "mmo_command", command)
+  if result:finished() then
+    if result:succeeded() then
+      sb.logInfo("[MMO Market] Command sent via terminal: " .. command.type)
+      return true
+    else
+      sb.logWarn("[MMO Market] Terminal rejected command")
+      return false
+    end
+  end
+
+  -- Message is pending, assume it will work
+  sb.logInfo("[MMO Market] Command sent (async): " .. command.type)
+  return true
 end
 
 function init()
@@ -149,21 +177,21 @@ function sendPurchaseCommand(listingId)
 end
 
 function writeCommand(command)
-  -- Use world.setProperty to store the command
-  -- The bridge will need to poll this, or we need another mechanism
-  -- For now, log what we would send
-  sb.logInfo("[MMO Market] Would send command: " .. command.type)
+  sb.logInfo("[MMO Market] Sending command: " .. command.type)
 
-  -- Store in a way the bridge can potentially access
-  -- This is a limitation - Starbound Lua can't write arbitrary files
-  -- We'll need to use a workaround
+  -- Send via the terminal object
+  if sendViaTerminal(command) then
+    sb.logInfo("[MMO Market] Command sent via terminal: " .. command.type .. " (id: " .. command.id .. ")")
+    return true
+  end
 
-  -- Option: Use player.setProperty to store pending commands
+  -- Fallback: store in player properties (for future retry)
+  sb.logWarn("[MMO Market] Terminal not available, queuing command locally")
   local pendingCommands = player.getProperty("mmo_pending_commands") or {}
   table.insert(pendingCommands, command)
   player.setProperty("mmo_pending_commands", pendingCommands)
 
-  sb.logInfo("[MMO Market] Command queued: " .. command.type .. " (id: " .. command.id .. ")")
+  return false
 end
 
 function updateCurrencyDisplay()

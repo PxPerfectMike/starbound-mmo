@@ -31,10 +31,15 @@ export function createPartyKitClient(host: string): PartyKitClient {
       marketSocket.addEventListener('message', (event) => {
         try {
           const data = JSON.parse(event.data)
+          console.log('[PartyKit] Market message received:', data.type, JSON.stringify(data).substring(0, 200))
           marketHandlers.forEach((handler) => handler(data))
         } catch (e) {
           console.error('Failed to parse market message:', e)
         }
+      })
+
+      marketSocket.addEventListener('error', (event) => {
+        console.error('[PartyKit] Market socket error:', event)
       })
 
       // Connect to presence room
@@ -70,7 +75,10 @@ export function createPartyKitClient(host: string): PartyKitClient {
 
   function sendToMarket(message: object) {
     if (marketSocket?.readyState === WebSocket.OPEN) {
+      console.log('[PartyKit] Sending to market:', JSON.stringify(message))
       marketSocket.send(JSON.stringify(message))
+    } else {
+      console.warn('[PartyKit] Market socket not open, cannot send:', message)
     }
   }
 
