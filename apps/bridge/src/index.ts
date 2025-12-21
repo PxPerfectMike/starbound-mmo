@@ -8,6 +8,8 @@ import { createStateWriter } from './state.js'
 
 const BRIDGE_DIR = process.env.BRIDGE_DIR || './mmo_bridge'
 const PARTYKIT_HOST = process.env.PARTYKIT_HOST || 'localhost:1999'
+// Path to Starbound mod folder - use game folder directly for live updates
+const MOD_DIR = process.env.MOD_DIR || 'C:/Program Files (x86)/Steam/steamapps/common/Starbound/mods/starbound-mmo'
 
 function getRequiredEnv(name: string): string {
   const value = process.env[name]
@@ -37,7 +39,7 @@ async function main() {
   await ensureBridgeDirectories(BRIDGE_DIR)
 
   // Initialize components
-  const stateWriter = createStateWriter(BRIDGE_DIR)
+  const stateWriter = createStateWriter(BRIDGE_DIR, MOD_DIR)
   const partykit = createPartyKitClient(PARTYKIT_HOST)
   const router = createCommandRouter(DATABASE_URL, partykit, stateWriter)
   const watcher = createWatcher(BRIDGE_DIR, router)

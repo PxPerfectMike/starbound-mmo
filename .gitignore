@@ -36,3 +36,4 @@ mod/*.pak
 # Bridge runtime
 server/mmo_bridge/
 apps/bridge/mmo_bridge/
+mod/cache/

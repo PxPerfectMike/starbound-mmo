@@ -9,9 +9,11 @@ export interface StateWriter {
   writeMarketCache(listings: unknown[]): Promise<void>
 }
 
-export function createStateWriter(bridgeDir: string): StateWriter {
+export function createStateWriter(bridgeDir: string, modDir?: string): StateWriter {
   const stateDir = join(bridgeDir, 'state')
   const cacheDir = join(bridgeDir, 'cache')
+  // Also write to mod folder so Starbound can read via root.assetJson()
+  const modCacheDir = modDir ? join(modDir, 'cache') : null
 
   // In-memory state cache to avoid excessive file reads
   const playerStates = new Map<string, PlayerState>()
@@ -92,20 +94,27 @@ export function createStateWriter(bridgeDir: string): StateWriter {
   }
 
   async function writeMarketCache(listings: unknown[]): Promise<void> {
-    // Write to market.json (matches what Lua expects)
+    const cacheData = JSON.stringify(
+      {
+        updatedAt: new Date().toISOString(),
+        listings,
+      },
+      null,
+      2
+    )
+
+    // Write to bridge cache directory
     const filePath = join(cacheDir, 'market.json')
     await mkdir(cacheDir, { recursive: true })
-    await writeFile(
-      filePath,
-      JSON.stringify(
-        {
-          updatedAt: new Date().toISOString(),
-          listings,
-        },
-        null,
-        2
-      )
-    )
+    await writeFile(filePath, cacheData)
+
+    // Also write to mod folder for Starbound asset access
+    if (modCacheDir) {
+      const modFilePath = join(modCacheDir, 'market.json')
+      await mkdir(modCacheDir, { recursive: true })
+      await writeFile(modFilePath, cacheData)
+      console.log(`Market cache also written to mod folder: ${modFilePath}`)
+    }
   }
 
   return {
