@@ -1,0 +1,38 @@
+{
+  "objectName": "mmo_mailbox",
+  "colonyTags": ["commerce", "storage"],
+  "rarity": "Legendary",
+  "category": "storage",
+  "price": 0,
+  "printable": false,
+
+  "description": "Collect items from market purchases and other rewards.",
+  "shortdescription": "^cyan;MMO Mailbox^reset;",
+  "race": "generic",
+
+  "apexDescription": "A secure container for delivered goods.",
+  "avianDescription": "My purchases arrive here, like gifts from the sky.",
+  "floranDescription": "Floran getsss packagesss here!",
+  "glitchDescription": "Satisfied. A reliable delivery system.",
+  "humanDescription": "Space Amazon, basically.",
+  "hylotlDescription": "Goods flow to me like a river to the sea.",
+  "novakidDescription": "My loot's waitin' right here!",
+
+  "inventoryIcon": "mailboxicon.png",
+
+  "orientations": [
+    {
+      "dualImage": "mailbox.png",
+      "imagePosition": [-8, 0],
+      "spaceScan": 0.1,
+      "anchors": ["bottom"]
+    }
+  ],
+
+  "scripts": ["/objects/mmo/mailbox/mailbox.lua"],
+  "scriptDelta": 60,
+
+  "interactive": true,
+  "interactAction": "ScriptPane",
+  "interactData": "/interface/mmo/mailbox/mailbox.config"
+}

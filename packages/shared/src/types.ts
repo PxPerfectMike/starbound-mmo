@@ -132,6 +132,9 @@ export interface CommandData {
   market_cancel: {
     listingId: string
   }
+  claim_item: {
+    pendingItemId: string
+  }
   faction_create: {
     name: string
     tag: string

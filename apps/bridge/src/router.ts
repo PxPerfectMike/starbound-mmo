@@ -43,6 +43,9 @@ export function createCommandRouter(
       case 'market_cancel':
         await handleMarketCancel(command as ValidatedCommand<'market_cancel'>)
         break
+      case 'claim_item':
+        await handleClaimItem(command as ValidatedCommand<'claim_item'>)
+        break
       case 'faction_create':
         await handleFactionCreate(command as ValidatedCommand<'faction_create'>)
         break
@@ -158,6 +161,56 @@ export function createCommandRouter(
       playerId: command.playerId,
       listingId: command.data.listingId,
     })
+  }
+
+  async function handleClaimItem(command: ValidatedCommand<'claim_item'>) {
+    const { playerId, data } = command
+
+    try {
+      // Delete the pending item from database
+      const deleted = await db
+        .delete(pendingItems)
+        .where(eq(pendingItems.id, data.pendingItemId))
+        .returning()
+
+      if (deleted.length > 0) {
+        console.log(`[Router] Claimed item ${data.pendingItemId} for player ${playerId}`)
+
+        // Get updated player state and write it
+        const player = await db.query.players.findFirst({
+          where: eq(players.id, playerId),
+        })
+
+        if (player) {
+          const remaining = await db.query.pendingItems.findMany({
+            where: eq(pendingItems.playerId, playerId),
+          })
+
+          await stateWriter.writePlayerState(player.id, player.starboundId, {
+            id: player.id,
+            displayName: player.displayName,
+            currency: player.currency,
+            factionId: player.factionId,
+            factionTag: null,
+            pendingItems: remaining.map((p) => ({
+              id: p.id,
+              itemName: p.itemName,
+              itemCount: p.itemCount,
+              itemParams: p.itemParams as Record<string, unknown>,
+              source: p.source as 'market_purchase' | 'market_return' | 'event_reward',
+              createdAt: p.createdAt.toISOString(),
+            })),
+            notifications: [],
+          })
+
+          console.log(`[Router] Updated player state: ${remaining.length} items remaining`)
+        }
+      } else {
+        console.warn(`[Router] Pending item not found: ${data.pendingItemId}`)
+      }
+    } catch (error) {
+      console.error('[Router] Error claiming item:', error)
+    }
   }
 
   async function handleFactionCreate(command: ValidatedCommand<'faction_create'>) {

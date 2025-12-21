@@ -24,6 +24,7 @@ export const COMMAND_TYPES = [
   'market_create',
   'market_purchase',
   'market_cancel',
+  'claim_item',
   'faction_create',
   'faction_join',
   'faction_leave',

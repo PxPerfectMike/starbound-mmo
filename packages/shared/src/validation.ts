@@ -35,6 +35,10 @@ export const marketCancelDataSchema = z.object({
   listingId: z.string().uuid(),
 })
 
+export const claimItemDataSchema = z.object({
+  pendingItemId: z.string().uuid(),
+})
+
 export const factionCreateDataSchema = z.object({
   name: z
     .string()
@@ -73,6 +77,7 @@ export const commandDataSchemas = {
   market_create: marketCreateDataSchema,
   market_purchase: marketPurchaseDataSchema,
   market_cancel: marketCancelDataSchema,
+  claim_item: claimItemDataSchema,
   faction_create: factionCreateDataSchema,
   faction_join: factionJoinDataSchema,
   faction_leave: factionLeaveDataSchema,
