@@ -1,0 +1,17 @@
+[
+  {
+    "op": "add",
+    "path": "/mmo_hub",
+    "value": {
+      "primaryDungeon": "mmo_hub",
+      "threatLevel": 1,
+      "gravity": 80,
+      "worldSize": [500, 300],
+      "dungeonBaseHeight": 150,
+      "ambientLightLevel": [150, 150, 170],
+      "ambientNoises": "/sfx/environmental/space_loop4.ogg",
+      "biome": "space",
+      "musicTrack": "/music/europa.ogg"
+    }
+  }
+]

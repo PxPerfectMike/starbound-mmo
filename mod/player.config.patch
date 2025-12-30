@@ -3,5 +3,10 @@
     "op": "add",
     "path": "/defaultItems/-",
     "value": { "item": "mmo_marketterminal" }
+  },
+  {
+    "op": "add",
+    "path": "/defaultItems/-",
+    "value": { "item": "mmo_hubbeacon" }
   }
 ]

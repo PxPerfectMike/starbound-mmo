@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "mmo_hub",
+    "species": "generic",
+    "rules": [],
+    "anchor": ["mmo_hub_main", "center"],
+    "gravity": 80,
+    "breathable": true,
+    "protected": true
+  },
+  "parts": [
+    {
+      "name": "mmo_hub_main",
+      "rules": [],
+      "def": ["tmx", "mmo_hub.json"]
+    }
+  ]
+}

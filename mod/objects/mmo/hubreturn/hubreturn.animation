@@ -1,0 +1,33 @@
+{
+  "animatedParts": {
+    "stateTypes": {
+      "portalState": {
+        "default": "idle",
+        "states": {
+          "idle": {
+            "frames": 10,
+            "cycle": 1.0,
+            "mode": "loop"
+          }
+        }
+      }
+    },
+    "parts": {
+      "portal": {
+        "properties": {
+          "centered": false,
+          "offset": [0, 0]
+        },
+        "partStates": {
+          "portalState": {
+            "idle": {
+              "properties": {
+                "image": "<partImage>:idle.<frame>"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

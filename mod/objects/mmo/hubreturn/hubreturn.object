@@ -1,0 +1,53 @@
+{
+  "objectName": "mmo_hubreturn",
+  "colonyTags": ["electronic", "station"],
+  "rarity": "Legendary",
+  "category": "teleporter",
+  "price": 0,
+  "printable": false,
+
+  "description": "Return to your ship from the MMO Hub.",
+  "shortdescription": "^green;Return Portal^reset;",
+  "race": "generic",
+
+  "apexDescription": "This will take me back to my ship.",
+  "avianDescription": "A portal home.",
+  "floranDescription": "Floran go back to ship!",
+  "glitchDescription": "Understood. A return teleporter.",
+  "humanDescription": "Time to head back.",
+  "hylotlDescription": "The path home.",
+  "novakidDescription": "Back to my own ship!",
+
+  "inventoryIcon": "hubreturnicon.png",
+
+  "orientations": [
+    {
+      "image": "hubreturn.png:idle.1",
+      "imagePosition": [-8, 0],
+      "spaceScan": 0.1,
+      "anchors": ["bottom"]
+    }
+  ],
+
+  "animation": "/objects/mmo/hubreturn/hubreturn.animation",
+  "animationParts": {
+    "portal": "hubreturn.png"
+  },
+  "animationPosition": [-8, 0],
+
+  "interactAction": "OpenTeleportDialog",
+  "interactData": {
+    "canBookmark": false,
+    "includePlayerBookmarks": false,
+    "destinations": [
+      {
+        "name": "Return to Ship",
+        "planetName": "Your Personal Vessel",
+        "icon": "default",
+        "warpAction": "OwnShip"
+      }
+    ]
+  },
+
+  "interactive": true
+}

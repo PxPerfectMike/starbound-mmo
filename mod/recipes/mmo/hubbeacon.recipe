@@ -1,0 +1,12 @@
+{
+  "input": [
+    { "item": "ironbar", "count": 10 },
+    { "item": "glass", "count": 5 },
+    { "item": "battery", "count": 2 }
+  ],
+  "output": {
+    "item": "mmo_hubbeacon",
+    "count": 1
+  },
+  "groups": ["craftingtable", "objects", "all"]
+}

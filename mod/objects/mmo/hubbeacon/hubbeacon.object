@@ -1,0 +1,53 @@
+{
+  "objectName": "mmo_hubbeacon",
+  "colonyTags": ["electronic", "station"],
+  "rarity": "Legendary",
+  "category": "teleporter",
+  "price": 0,
+  "printable": false,
+
+  "description": "Teleport to the MMO Hub Station to meet other players and access services.",
+  "shortdescription": "^cyan;MMO Hub Beacon^reset;",
+  "race": "generic",
+
+  "apexDescription": "A portal to the central hub. How convenient.",
+  "avianDescription": "This beacon connects to a gathering place among the stars.",
+  "floranDescription": "Floran can go meet other playersss!",
+  "glitchDescription": "Intrigued. A teleportation device linked to a shared station.",
+  "humanDescription": "One click and I'm at the hub. Space travel is amazing.",
+  "hylotlDescription": "A gateway to a place where many streams converge.",
+  "novakidDescription": "This here contraption takes me to where the action is!",
+
+  "inventoryIcon": "hubbeaconicon.png",
+
+  "orientations": [
+    {
+      "image": "hubbeacon.png:idle.1",
+      "imagePosition": [-8, 0],
+      "spaceScan": 0.1,
+      "anchors": ["bottom"]
+    }
+  ],
+
+  "animation": "/objects/mmo/hubbeacon/hubbeacon.animation",
+  "animationParts": {
+    "beacon": "hubbeacon.png"
+  },
+  "animationPosition": [-8, 0],
+
+  "interactAction": "OpenTeleportDialog",
+  "interactData": {
+    "canBookmark": false,
+    "includePlayerBookmarks": false,
+    "destinations": [
+      {
+        "name": "MMO Hub Station",
+        "planetName": "Central Trading Hub",
+        "icon": "default",
+        "warpAction": "InstanceWorld:mmo_hub"
+      }
+    ]
+  },
+
+  "interactive": true
+}

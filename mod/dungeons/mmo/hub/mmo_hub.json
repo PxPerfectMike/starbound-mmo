@@ -1,0 +1,229 @@
+{ "backgroundcolor":"#000000",
+ "height":25,
+ "layers":[
+        {
+         "compression":"zlib",
+         "data":"eJxjYBgFo2AU0BIAADvgARE=",
+         "encoding":"base64",
+         "height":25,
+         "name":"back",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":50,
+         "x":0,
+         "y":0
+        },
+        {
+         "compression":"zlib",
+         "data":"eJxjYBgFo2AUjIJRMApGNgAAAZoAAQ==",
+         "encoding":"base64",
+         "height":25,
+         "name":"front",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":50,
+         "x":0,
+         "y":0
+        },
+        {
+         "draworder":"topdown",
+         "name":"objects",
+         "objects":[
+                {
+                 "height":0,
+                 "name":"anchor",
+                 "properties": {},
+                 "rotation":0,
+                 "type":"anchor",
+                 "visible":true,
+                 "width":0,
+                 "x":400,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"mmo_marketterminal",
+                 "properties": {
+                    "parameters": "{}"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":160,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"mmo_mailbox",
+                 "properties": {
+                    "parameters": "{}"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":288,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"mmo_hubreturn",
+                 "properties": {
+                    "parameters": "{}"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":544,
+                 "y":168
+                },
+                {
+
+                 "height":0,
+                 "name":"yourflaghere",
+                 "properties": {
+                    "tilesetDirection": "left"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":64,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"yourflaghere",
+                 "properties": {
+                    "tilesetDirection": "right"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":640,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"yourflaghere",
+                 "properties": {},
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":352,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"yourflaghere",
+                 "properties": {},
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+
+                 "x":448,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"yourflaghere",
+                 "properties": {},
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":224,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"smallchair",
+                 "properties": {
+                    "parameters": "{\"direction\": \"left\"}"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":480,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"smallchair",
+                 "properties": {
+                    "parameters": "{\"direction\": \"right\"}"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":512,
+                 "y":168
+                },
+                {
+                 "height":0,
+                 "name":"woodentable",
+                 "properties": {
+                    "parameters": "{}"
+                 },
+                 "rotation":0,
+                 "type":"object",
+                 "visible":true,
+                 "width":0,
+                 "x":496,
+                 "y":168
+                },
+                {
+                 "height":8,
+                 "name":"",
+                 "properties": {
+                    "material": "frozensand"
+                 },
+                 "rotation":0,
+                 "type":"surface",
+                 "visible":true,
+                 "width":800,
+                 "x":0,
+                 "y":192
+                },
+                {
+                 "height":200,
+                 "name":"",
+                 "properties": {
+                    "material": "frozensand"
+                 },
+                 "rotation":0,
+                 "type":"back",
+                 "visible":true,
+                 "width":800,
+                 "x":0,
+                 "y":0
+                }
+         ],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "orientation":"orthogonal",
+ "properties": {},
+ "renderorder":"right-down",
+ "tileheight":8,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"..\/..\/..\/..\/..\/..\/..\/Program Files (x86)\/Steam\/steamapps\/common\/Starbound\/assets\/packed\/tilesets\/packed\/materials.json"
+        }],
+ "tilewidth":8,
+ "version":1,
+ "width":50
+}

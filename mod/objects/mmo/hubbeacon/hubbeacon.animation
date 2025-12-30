@@ -1,0 +1,33 @@
+{
+  "animatedParts": {
+    "stateTypes": {
+      "beaconState": {
+        "default": "idle",
+        "states": {
+          "idle": {
+            "frames": 10,
+            "cycle": 1.0,
+            "mode": "loop"
+          }
+        }
+      }
+    },
+    "parts": {
+      "beacon": {
+        "properties": {
+          "centered": false,
+          "offset": [0, 0]
+        },
+        "partStates": {
+          "beaconState": {
+            "idle": {
+              "properties": {
+                "image": "<partImage>:idle.<frame>"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
