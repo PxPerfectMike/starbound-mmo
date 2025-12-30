@@ -3,16 +3,45 @@
     "name": "mmo_hub",
     "species": "generic",
     "rules": [],
-    "anchor": ["mmo_hub_main", "center"],
+    "anchor": ["mmo_hub"],
     "gravity": 80,
-    "breathable": true,
+    "maxRadius": 1000000,
+    "maxParts": 100,
     "protected": true
   },
+  "tiles": [
+    {
+      "value": [0, 0, 0, 255],
+      "brush": [["clear"]]
+    },
+    {
+      "value": [100, 100, 100, 255],
+      "brush": [["front", "cobblestone"]]
+    },
+    {
+      "value": [255, 0, 0, 255],
+      "brush": [["clear"], ["object", "mmo_hubreturn"]]
+    },
+    {
+      "value": [0, 255, 0, 255],
+      "brush": [["clear"], ["object", "mmo_marketterminal"]]
+    },
+    {
+      "value": [0, 0, 255, 255],
+      "brush": [["clear"], ["object", "mmo_mailbox"]]
+    },
+    {
+      "value": [255, 255, 0, 255],
+      "brush": [["playerstart"]]
+    }
+  ],
   "parts": [
     {
-      "name": "mmo_hub_main",
-      "rules": [],
-      "def": ["tmx", "mmo_hub.json"]
+      "name": "mmo_hub",
+      "rules": [
+        ["maxSpawnCount", [1]]
+      ],
+      "def": ["image", "mmo_hub.png"]
     }
   ]
 }

@@ -8,10 +8,9 @@
       "gravity": 80,
       "worldSize": [500, 300],
       "dungeonBaseHeight": 150,
+      "dungeonSurfaceHeight": 150,
       "ambientLightLevel": [150, 150, 170],
-      "ambientNoises": "/sfx/environmental/space_loop4.ogg",
-      "biome": "space",
-      "musicTrack": "/music/europa.ogg"
+      "biome": "garden"
     }
   }
 ]

@@ -13,11 +13,10 @@
         "nonCombat": true
       },
       "skyParameters": {
-        "spaceLevel": 100,
-        "surfaceLevel": 500,
-        "ambientLightLevel": [80, 80, 100],
+        "spaceLevel": 3000,
+        "surfaceLevel": 150,
+        "ambientLightLevel": [100, 100, 120],
         "skyType": "barren",
-        "horizonImages": [],
         "dayLength": 1000,
         "seed": 12345
       }
