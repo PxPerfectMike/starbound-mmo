@@ -37,3 +37,9 @@ mod/*.pak
 server/mmo_bridge/
 apps/bridge/mmo_bridge/
 mod/cache/
+
+# Claude
+.claude/
+CLAUDE.md
+claude.md
+*.claude
