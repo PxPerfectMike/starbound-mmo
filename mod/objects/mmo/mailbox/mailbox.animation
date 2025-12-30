@@ -1,0 +1,33 @@
+{
+  "animatedParts": {
+    "stateTypes": {
+      "mailboxState": {
+        "default": "idle",
+        "states": {
+          "idle": {
+            "frames": 4,
+            "cycle": 0.5,
+            "mode": "loop"
+          }
+        }
+      }
+    },
+    "parts": {
+      "mailbox": {
+        "properties": {
+          "centered": false,
+          "offset": [0, 0]
+        },
+        "partStates": {
+          "mailboxState": {
+            "idle": {
+              "properties": {
+                "image": "<partImage>:idle.<frame>"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

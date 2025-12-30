@@ -1,0 +1,33 @@
+{
+  "animatedParts": {
+    "stateTypes": {
+      "terminalState": {
+        "default": "idle",
+        "states": {
+          "idle": {
+            "frames": 10,
+            "cycle": 1.0,
+            "mode": "loop"
+          }
+        }
+      }
+    },
+    "parts": {
+      "terminal": {
+        "properties": {
+          "centered": false,
+          "offset": [0, 0]
+        },
+        "partStates": {
+          "terminalState": {
+            "idle": {
+              "properties": {
+                "image": "<partImage>:idle.<frame>"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
