@@ -6,7 +6,7 @@
       "primaryDungeon": "mmo_hub",
       "threatLevel": 1,
       "gravity": 80,
-      "worldSize": [500, 300],
+      "worldSize": [520, 300],
       "dungeonBaseHeight": 150,
       "dungeonSurfaceHeight": 150,
       "ambientLightLevel": [150, 150, 170],
