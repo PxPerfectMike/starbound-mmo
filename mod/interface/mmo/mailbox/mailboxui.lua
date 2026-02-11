@@ -39,6 +39,13 @@ local function sendViaMailbox(command)
 end
 
 function init()
+  -- Admin guard: block all MMO features if admin mode is active
+  if player.isAdmin() then
+    sb.logWarn("[MMO Mailbox] Admin mode detected - blocking access")
+    widget.setText("statusLabel", "^red;Admin mode detected. Disable admin (/admin) to use the mailbox.^reset;")
+    return
+  end
+
   local success, err = pcall(function()
     sb.logInfo("[MMO Mailbox] Initializing...")
 
@@ -223,5 +230,10 @@ function claimAll()
 end
 
 function update(dt)
-  -- Could poll for updates here if needed
+  -- Admin guard: close pane if admin is toggled on while mailbox is open
+  if player.isAdmin() then
+    sb.logWarn("[MMO Mailbox] Admin mode toggled while mailbox open - closing")
+    pane.dismiss()
+    return
+  end
 end

@@ -1,0 +1,12 @@
+{
+  "name" : "mmo_adminblock",
+  "effectConfig" : {},
+  "defaultDuration" : 5,
+
+  "scripts" : [
+    "mmo_adminblock.lua"
+  ],
+
+  "label" : "MMO Admin Block",
+  "icon" : "/interface/statuses/invisible.png"
+}

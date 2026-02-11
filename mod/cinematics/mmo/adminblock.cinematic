@@ -1,0 +1,92 @@
+{
+  "scissor" : false,
+  "letterbox" : false,
+  "panels" : [
+    {
+      "drawables" : [
+        {
+          "image" : "/cinematics/respawn/black.png"
+        }
+      ],
+      "keyframes" : [
+        {
+          "timecode" : 0.0,
+          "zoom" : 500,
+          "alpha" : 1,
+          "position" : [476, 253]
+        },
+        {
+          "timecode" : 5.0,
+          "zoom" : 500,
+          "alpha" : 1,
+          "position" : [476, 253]
+        }
+      ]
+    },
+    {
+      "startTime" : 0.0,
+      "endTime" : 5.0,
+      "drawables" : [],
+      "fontSize" : 24,
+      "text" : "ADMIN MODE DETECTED",
+      "textPosition" : {
+        "position" : [0, 60],
+        "hAnchor" : "mid",
+        "vAnchor" : "mid",
+        "wrapWidth" : 400
+      },
+      "keyframes" : [
+        {
+          "timecode" : 0.0,
+          "alpha" : 1.0,
+          "zoom" : 1.0,
+          "position" : [476, 300],
+          "textPercentage" : 1
+        },
+        {
+          "timecode" : 5.0,
+          "alpha" : 1.0,
+          "zoom" : 1.0,
+          "position" : [476, 300],
+          "textPercentage" : 1
+        }
+      ]
+    },
+    {
+      "startTime" : 0.3,
+      "endTime" : 5.0,
+      "drawables" : [],
+      "fontSize" : 14,
+      "text" : "Admin mode is not allowed on MMO characters.\nType /admin in chat to disable it.",
+      "textPosition" : {
+        "position" : [0, 0],
+        "hAnchor" : "mid",
+        "vAnchor" : "mid",
+        "wrapWidth" : 400
+      },
+      "keyframes" : [
+        {
+          "timecode" : 0.0,
+          "alpha" : 0.0,
+          "zoom" : 1.0,
+          "position" : [476, 240],
+          "textPercentage" : 1
+        },
+        {
+          "timecode" : 0.3,
+          "alpha" : 1.0,
+          "zoom" : 1.0,
+          "position" : [476, 240],
+          "textPercentage" : 1
+        },
+        {
+          "timecode" : 5.0,
+          "alpha" : 1.0,
+          "zoom" : 1.0,
+          "position" : [476, 240],
+          "textPercentage" : 1
+        }
+      ]
+    }
+  ]
+}

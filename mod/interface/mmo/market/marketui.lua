@@ -67,6 +67,13 @@ local function sendViaTerminal(command)
 end
 
 function init()
+  -- Admin guard: block all MMO features if admin mode is active
+  if player.isAdmin() then
+    sb.logWarn("[MMO Market] Admin mode detected - blocking access")
+    widget.setText("statusLabel", "^red;Admin mode detected. Disable admin (/admin) to use the market.^reset;")
+    return
+  end
+
   local success, err = pcall(function()
     sb.logInfo("[MMO Market] Initializing...")
 
@@ -97,6 +104,13 @@ function init()
 end
 
 function update(dt)
+  -- Admin guard: close pane if admin is toggled on while market is open
+  if player.isAdmin() then
+    sb.logWarn("[MMO Market] Admin mode toggled while market open - closing")
+    pane.dismiss()
+    return
+  end
+
   -- Check for player state if not loaded
   if not playerStateLoaded then
     local state = loadPlayerState()
@@ -191,9 +205,9 @@ end
 
 function updateCurrencyDisplay()
   if playerState and playerState.currency then
-    widget.setText("currencyLabel", "^#b89040;Balance:^reset; ^orange;" .. tostring(playerState.currency) .. "^reset; ^#b89040;CR^reset;")
+    widget.setText("currencyLabel", "^#b89040;Balance:^reset; ^orange;" .. tostring(playerState.currency) .. "^reset; ^#b89040;Pixels^reset;")
   else
-    widget.setText("currencyLabel", "^#b89040;Balance:^reset; ^orange;---^reset; ^#b89040;CR^reset;")
+    widget.setText("currencyLabel", "^#b89040;Balance:^reset; ^orange;---^reset; ^#b89040;Pixels^reset;")
   end
 end
 
@@ -398,7 +412,7 @@ function displayMyListings()
       local totalPrice = listing.totalPrice or listing.total_price or 0
 
       widget.setText("myListing" .. i, itemName .. " ^gray;x" .. itemCount .. "^reset;")
-      widget.setText("myPrice" .. i, "^orange;" .. totalPrice .. " CR^reset;")
+      widget.setText("myPrice" .. i, "^orange;" .. totalPrice .. " Pixels^reset;")
       widget.setVisible("myListing" .. i, true)
       widget.setVisible("myPrice" .. i, true)
       widget.setVisible("cancel" .. i, true)
@@ -480,7 +494,7 @@ function updateTotalPrice()
   if selectedItem and pricePerUnit > 0 then
     local count = selectedItem.count or 1
     local total = pricePerUnit * count
-    widget.setText("totalPriceLabel", "Total: ^orange;" .. total .. " CR^reset;")
+    widget.setText("totalPriceLabel", "Total: ^orange;" .. total .. " Pixels^reset;")
   else
     widget.setText("totalPriceLabel", "")
   end

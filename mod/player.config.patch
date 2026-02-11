@@ -8,5 +8,10 @@
     "op": "add",
     "path": "/defaultItems/-",
     "value": { "item": "mmo_hubbeacon" }
+  },
+  {
+    "op": "add",
+    "path": "/genericScriptContexts/mmo",
+    "value": "/scripts/mmo/mmo_player.lua"
   }
 ]
