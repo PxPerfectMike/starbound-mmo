@@ -5,6 +5,7 @@
 local LISTINGS_PER_PAGE = 8
 local MY_LISTINGS_PER_PAGE = 6
 local CACHE_REFRESH_INTERVAL = 2.0
+local LISTING_FEE_PERCENT = 5  -- must match packages/shared/src/constants.ts
 
 local DURATION_OPTIONS = {
   { label = "12h", seconds = 43200 },
@@ -531,6 +532,16 @@ function createListing()
     return
   end
 
+  -- Listing fee is charged server-side (LISTING_FEE_PERCENT in packages/shared).
+  -- Pre-check locally so we never consume an item the server will reject.
+  local totalPrice = pricePerUnit * (selectedItem.count or 1)
+  local listingFee = math.floor(totalPrice * LISTING_FEE_PERCENT / 100)
+  local balance = player.getProperty("mmo_currency") or 0
+  if balance < listingFee then
+    widget.setText("createStatus", "^red;Need " .. listingFee .. " pixels for the listing fee^reset;")
+    return
+  end
+
   local durationOption = DURATION_OPTIONS[selectedDuration]
   local itemDescriptor = {
     name = selectedItem.name,
@@ -671,7 +682,7 @@ function buyListing(displayIndex)
 
   local dispatched = sendViaTerminal(command,
     function()
-      widget.setText("statusLabel", "^green;Purchase sent! Check your mailbox.^reset;")
+      widget.setText("statusLabel", "^green;Purchase sent.^reset; ^gray;Item reaches your mailbox after the next game launch.^reset;")
     end,
     refund)
 
