@@ -46,3 +46,6 @@ claude.md
 
 # SvelteKit static build output (vercel builds it)
 apps/web/public/
+
+# PartyKit local dev state
+.partykit/
