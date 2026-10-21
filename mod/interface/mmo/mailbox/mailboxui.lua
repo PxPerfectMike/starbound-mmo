@@ -74,17 +74,13 @@ function init()
 end
 
 function loadPlayerState()
-  if not starboundId then return nil end
+  if not player.getProperty("mmo_character") then return nil end
 
-  local success, data = pcall(function()
-    return root.assetJson("/cache/player_" .. starboundId .. ".json")
-  end)
-
-  if success and data and type(data) == "table" then
-    return data
-  end
-
-  return nil
+  return {
+    id = starboundId or player.uniqueId(),
+    currency = player.getProperty("mmo_currency") or 0,
+    pendingItems = player.getProperty("mmo_pending_items") or {}
+  }
 end
 
 function displayItems()
@@ -156,8 +152,9 @@ function claimItem(index)
     -- Send claim command to bridge to remove from database
     sendClaimCommand(item.id)
 
-    -- Remove from local list and update display
+    -- Remove from local list, persist so reopening the mailbox cannot re-claim it
     table.remove(pendingItems, index)
+    player.setProperty("mmo_pending_items", pendingItems)
     displayItems()
 
     widget.setText("statusLabel", "^green;Claimed " .. item.itemName .. "!^reset;")
@@ -168,15 +165,15 @@ function claimItem(index)
 end
 
 function sendClaimCommand(pendingItemId)
-  if not playerState or not playerState.id then
-    sb.logWarn("[MMO Mailbox] Cannot send claim: player not registered")
+  if not starboundId then
+    sb.logWarn("[MMO Mailbox] Cannot send claim: no player ID")
     return false
   end
 
   local command = {
     id = generateId(),
     type = "claim_item",
-    playerId = playerState.id,
+    playerId = starboundId,
     timestamp = os.time(),
     data = {
       pendingItemId = pendingItemId
@@ -222,6 +219,7 @@ function claimAll()
     end
   end
 
+  player.setProperty("mmo_pending_items", pendingItems)
   displayItems()
 
   if claimed > 0 then

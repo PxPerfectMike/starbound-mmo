@@ -1,6 +1,6 @@
 -- MMO Player Monitor
 -- Runs as a genericScriptContext on every player.
--- Handles: MMO registration prompt, admin mode detection & lockout.
+-- Handles: MMO registration prompt, admin mode detection & lockout, login sync.
 
 require "/scripts/util.lua"
 
@@ -35,6 +35,81 @@ function init()
       sb.logInfo("[MMO Player] Cleared stale admin flag from previous session")
     end
   end
+
+  -- Recover escrowed items from failed market listing creation
+  local escrowedItem = player.getProperty("mmo_escrowed_item")
+  if escrowedItem then
+    player.giveItem(escrowedItem)
+    player.setProperty("mmo_escrowed_item", nil)
+    sb.logInfo("[MMO Player] Recovered escrowed item: " .. tostring(escrowedItem.name))
+    player.radioMessage({
+      messageId = "mmo_item_recovered",
+      unique = false,
+      text = "^yellow;Recovered item:^reset; " .. tostring(escrowedItem.name) .. " ^gray;(market listing may not have been created)^reset;"
+    })
+  end
+
+  -- MMO login sync: only for registered MMO characters
+  if player.getProperty("mmo_character") then
+    syncFromServerCache()
+    sendPlayerJoinCommand()
+  end
+end
+
+-- Read server cache from previous session and sync properties
+function syncFromServerCache()
+  local uniqueId = player.uniqueId()
+  local cachePath = "/cache/player_" .. uniqueId .. ".json"
+
+  local success, data = pcall(function()
+    return root.assetJson(cachePath)
+  end)
+
+  if success and data and type(data) == "table" then
+    sb.logInfo("[MMO Player] Found server cache - syncing state")
+
+    -- Sync currency if server has a value
+    if data.currency ~= nil then
+      local localCurrency = player.getProperty("mmo_currency") or 0
+      if data.currency ~= localCurrency then
+        sb.logInfo("[MMO Player] Syncing currency: local=" .. tostring(localCurrency) .. " server=" .. tostring(data.currency))
+        player.setProperty("mmo_currency", data.currency)
+      end
+    end
+
+    -- Sync pending items if server has them
+    if data.pendingItems ~= nil then
+      local localPending = player.getProperty("mmo_pending_items") or {}
+      if #data.pendingItems ~= #localPending then
+        sb.logInfo("[MMO Player] Syncing pending items: local=" .. tostring(#localPending) .. " server=" .. tostring(#data.pendingItems))
+        player.setProperty("mmo_pending_items", data.pendingItems)
+      end
+    end
+  else
+    sb.logInfo("[MMO Player] No server cache found (first login or cache not yet written)")
+  end
+end
+
+-- Send player_join command via Starbound log so bridge picks it up
+function sendPlayerJoinCommand()
+  local uniqueId = player.uniqueId()
+  local playerId = player.id()
+  local displayName = world.entityName(playerId) or "Unknown"
+
+  local command = {
+    id = tostring(os.time()) .. "_" .. tostring(math.random(10000, 99999)),
+    type = "player_join",
+    playerId = uniqueId,
+    timestamp = os.time(),
+    data = {
+      displayName = displayName
+    }
+  }
+
+  -- Encode as JSON and log so the bridge log watcher can pick it up
+  local json = sb.printJson(command)
+  sb.logInfo("[MMO_CMD]" .. json)
+  sb.logInfo("[MMO Player] Sent player_join command for " .. displayName)
 end
 
 function update(dt)
@@ -50,12 +125,17 @@ function update(dt)
         player.setProperty("mmo_character", true)
         player.setProperty("mmo_registered", true)
         player.setProperty("mmo_registered_at", os.time())
+        player.setProperty("mmo_currency", 1000)
+        player.setProperty("mmo_pending_items", {})
         sb.logInfo("[MMO Player] Character registered as MMO")
         player.radioMessage({
           messageId = "mmo_registered",
           unique = false,
           text = "^green;MMO character registered!^reset; Welcome to the MMO. Admin mode is now restricted on this character."
         })
+
+        -- Send player_join immediately after registration
+        sendPlayerJoinCommand()
       else
         player.setProperty("mmo_character", false)
         player.setProperty("mmo_registered", true)

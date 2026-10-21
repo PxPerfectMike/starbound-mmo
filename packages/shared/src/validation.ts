@@ -16,7 +16,6 @@ export const itemDescriptorSchema = z.object({
 
 // Command Schemas
 export const playerJoinDataSchema = z.object({
-  starboundId: z.string().min(1),
   displayName: z.string().min(1).max(32),
 })
 

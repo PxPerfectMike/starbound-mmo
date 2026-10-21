@@ -43,3 +43,6 @@ mod/cache/
 CLAUDE.md
 claude.md
 *.claude
+
+# SvelteKit static build output (vercel builds it)
+apps/web/public/

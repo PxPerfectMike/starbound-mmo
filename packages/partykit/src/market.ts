@@ -48,6 +48,7 @@ export default class MarketServer implements Party.Server {
           columns: {
             id: true,
             displayName: true,
+            starboundId: true,
           },
         },
       },
@@ -170,7 +171,7 @@ export default class MarketServer implements Party.Server {
         ...newListing,
         itemParams: newListing.itemParams as Record<string, unknown>,
         status: newListing.status as 'active',
-        seller: { id: player.id, displayName: player.displayName },
+        seller: { id: player.id, displayName: player.displayName, starboundId: player.starboundId },
       }
       this.state.listings.unshift(listingWithSeller)
 

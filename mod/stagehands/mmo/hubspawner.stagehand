@@ -1,0 +1,5 @@
+{
+  "type": "hubspawner",
+  "scripts": ["/stagehands/mmo/hubspawner.lua"],
+  "scriptDelta": 0
+}

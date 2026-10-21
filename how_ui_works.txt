@@ -1,0 +1,181 @@
+How Starbound UI really works
+
+Starbound UI is built on JSON-based pane definitions rendered by the engine and optionally driven by Lua pane scripts.
+
+The important part:
+
+👉 All interfaces are just panes.
+The stock ones are examples, not requirements.
+
+What you can do
+✅ Create a completely custom interface
+
+You can define your own UI file anywhere in your mod, for example:
+
+/interface/mycoolui/mycoolui.config
+/interface/mycoolui/mycoolui.lua
+
+
+This file does not need to reference or inherit from:
+
+craftingbody
+
+keypad
+
+collections
+
+shiplocker
+
+or any other vanilla UI
+
+It just needs to follow the pane schema.
+
+✅ Use your own layout, widgets, and logic
+
+You control:
+
+Layout and positioning
+
+Images and animations
+
+Buttons, lists, text fields
+
+Mouse and keyboard interactions
+
+Dynamic data via Lua
+
+The UI system is surprisingly flexible once you stop thinking in terms of vanilla screens.
+
+✅ Open it from almost anywhere
+
+You can open your custom UI via:
+
+Objects
+
+Items
+
+Techs
+
+NPC interactions
+
+Console commands (for testing)
+
+Example (object interaction):
+
+"interactAction" : "OpenPane",
+"interactData" : {
+  "gui" : "/interface/mycoolui/mycoolui.config"
+}
+
+
+No vanilla interface involvement at all.
+
+What you cannot do (hard limits)
+
+These are engine-level constraints and cannot be modded around.
+
+❌ No arbitrary window resizing
+
+Pane size is fixed when opened.
+
+You can fake resizing by:
+
+Swapping panes
+
+Showing/hiding layers
+
+Animating panels
+
+❌ No custom UI rendering code
+
+You cannot:
+
+Draw raw primitives
+
+Render custom shaders
+
+Embed HTML or canvas
+
+Everything must be:
+
+Images
+
+Labels
+
+Lists
+
+Buttons
+
+(Animations are image-based.)
+
+❌ UI runs in a sandbox
+
+Your Lua UI script:
+
+Cannot directly modify the world
+
+Cannot spawn entities
+
+Must communicate via messages or object callbacks
+
+This is intentional and unavoidable.
+
+The mental model that unlocks everything
+
+Stop thinking of Starbound UI as “screens”.
+
+Think of it as:
+
+A declarative UI description + a Lua state machine
+
+Once you do that, you can build:
+
+Terminals
+
+Fake operating systems
+
+Marketplaces
+
+MMO-style social hubs
+
+Map systems
+
+Inventory abstractions
+
+Dialogue-driven interfaces
+
+People have built:
+
+Full computers
+
+Internet simulators
+
+Banking systems
+
+RTS-like command panels
+
+All with custom panes.
+
+Best practice structure (recommended)
+/interface/
+  /myui/
+    myui.config
+    myui.lua
+    myui.widgets/
+    myui.images/
+
+
+Keep it isolated. Never modify vanilla files directly.
+
+When vanilla interfaces are useful
+
+Only reuse them if you want:
+
+Native crafting behavior
+
+Built-in item grid logic
+
+Minimal Lua work
+
+But for anything ambitious (like your MMO ideas):
+custom UI is the correct path.

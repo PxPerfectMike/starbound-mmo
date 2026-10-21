@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starbound MMO - Testing Checklist</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f1117;
+    color: #c9d1d9;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  h1 {
+    color: #58a6ff;
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle {
+    color: #6e7681;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+  .progress-bar-container {
+    background: #21262d;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border: 1px solid #30363d;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .progress-header span { font-weight: 600; color: #e6edf3; }
+  .progress-count { color: #58a6ff; font-size: 0.9rem; }
+  .progress-track {
+    background: #0d1117;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, #238636, #2ea043);
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  .section {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s;
+  }
+  .section-header:hover { background: #1c2129; }
+  .section.open .section-header { border-bottom-color: #30363d; }
+  .section-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #e6edf3;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .badge-critical { background: #da363440; color: #f85149; }
+  .badge-test { background: #58a6ff25; color: #58a6ff; }
+  .badge-info { background: #8b949e25; color: #8b949e; }
+  .chevron {
+    transition: transform 0.2s;
+    color: #6e7681;
+    font-size: 0.8rem;
+  }
+  .section.open .chevron { transform: rotate(90deg); }
+  .section-body { display: none; padding: 0.5rem 0; }
+  .section.open .section-body { display: block; }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.55rem 1.25rem;
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .check-item:hover { background: #1c2129; }
+  .check-item.checked { opacity: 0.5; }
+  .check-item.checked .check-label { text-decoration: line-through; }
+  .check-item input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border: 2px solid #30363d;
+    border-radius: 4px;
+    margin-top: 2px;
+    cursor: pointer;
+    position: relative;
+    background: #0d1117;
+    transition: all 0.15s;
+  }
+  .check-item input[type="checkbox"]:checked {
+    background: #238636;
+    border-color: #238636;
+  }
+  .check-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .check-label { font-size: 0.9rem; }
+  .check-label code {
+    background: #6e768140;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem;
+    color: #e6edf3;
+  }
+  .note {
+    margin: 0.25rem 1.25rem 0.75rem 3rem;
+    font-size: 0.8rem;
+    color: #6e7681;
+    font-style: italic;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid #21262d;
+    margin: 0.25rem 1.25rem;
+  }
+  .section-count {
+    font-size: 0.8rem;
+    color: #6e7681;
+  }
+  .reset-btn {
+    background: #21262d;
+    color: #f85149;
+    border: 1px solid #30363d;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { background: #da363420; border-color: #f85149; }
+  .legend {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: #8b949e;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-critical { background: #f85149; }
+  .dot-test { background: #58a6ff; }
+  .dot-info { background: #8b949e; }
+</style>
+</head>
+<body>
+
+<h1>Starbound MMO - Testing Checklist</h1>
+<p class="subtitle">Audit everything that exists, verify it works, identify what to fix before building more.</p>
+
+<div class="progress-bar-container">
+  <div class="progress-header">
+    <span>Overall Progress</span>
+    <span class="progress-count" id="progressCount">0 / 0</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot dot-critical"></div> Known broken — needs fix</div>
+  <div class="legend-item"><div class="legend-dot dot-test"></div> Needs in-game testing</div>
+  <div class="legend-item"><div class="legend-dot dot-info"></div> Verify / cleanup</div>
+</div>
+
+<div id="sections">
+
+<!-- SECTION: Hub World -->
+<div class="section open" data-section="hub-world">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Hub World Loading <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="hub-1"><span class="check-label"><code>/warp InstanceWorld:mmo_hub</code> — does the world generate without errors?</span></label>
+    <label class="check-item"><input type="checkbox" data-id="hub-2"><span class="check-label">Floor and structure render correctly from <code>mmo_hub.png</code></span></label>
+    <label class="check-item"><input type="checkbox" data-id="hub-3"><span class="check-label">MMO objects present: hub return, market terminal, mailbox, hub beacon</span></label>
+    <p class="note">If objects are missing, the dungeon brushes or stagehand spawner need fixing.</p>
+    <label class="check-item"><input type="checkbox" data-id="hub-4"><span class="check-label">Player spawns in a sensible location (not falling into void)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="hub-5"><span class="check-label">No placeholder <code>"yourstation"</code> objects visible (14 exist in dungeon file)</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Hub Beacon -->
+<div class="section" data-section="hub-beacon">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Hub Beacon (Teleport to Hub) <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="beacon-1"><span class="check-label"><code>/spawnitem mmo_hubbeacon</code> — appears in inventory</span></label>
+    <label class="check-item"><input type="checkbox" data-id="beacon-2"><span class="check-label">Can be placed as an object in the world</span></label>
+    <label class="check-item"><input type="checkbox" data-id="beacon-3"><span class="check-label">Interact opens a teleport dialog</span></label>
+    <label class="check-item"><input type="checkbox" data-id="beacon-4"><span class="check-label">Teleporting actually lands you in the MMO hub</span></label>
+    <label class="check-item"><input type="checkbox" data-id="beacon-5"><span class="check-label">Animation plays correctly (sprite looks right)</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Hub Return -->
+<div class="section" data-section="hub-return">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Hub Return (Teleport Home) <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="return-1"><span class="check-label">Hub return object exists in the hub world</span></label>
+    <label class="check-item"><input type="checkbox" data-id="return-2"><span class="check-label">Interact opens teleport dialog</span></label>
+    <label class="check-item"><input type="checkbox" data-id="return-3"><span class="check-label">Teleporting sends you back to your ship</span></label>
+    <label class="check-item"><input type="checkbox" data-id="return-4"><span class="check-label">Animation/sprite looks correct</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Market Terminal UI -->
+<div class="section" data-section="market-ui">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Market Terminal UI <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="market-1"><span class="check-label">Interact with terminal — UI opens without crash</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-2"><span class="check-label">Browse tab renders (even if empty)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-3"><span class="check-label">Tab switching works: Browse / My Auctions / Create</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-4"><span class="check-label">Search field accepts input</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-5"><span class="check-label">Pagination (Prev/Next) buttons respond</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-6"><span class="check-label">Currency display shows a value (even if default 1000)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-7"><span class="check-label">Create tab — can select an item and set a price</span></label>
+    <label class="check-item"><input type="checkbox" data-id="market-8"><span class="check-label">Creating a listing writes a command file to <code>mmo_bridge/commands/</code></span></label>
+    <p class="note">Also check Starbound log for [MMO_CMD] entries as fallback path.</p>
+    <label class="check-item"><input type="checkbox" data-id="market-9"><span class="check-label">Market terminal animation plays (10-frame sprite sheet)</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Mailbox UI -->
+<div class="section" data-section="mailbox-ui">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Mailbox UI <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="mail-1"><span class="check-label">Interact with mailbox — UI opens without crash</span></label>
+    <label class="check-item"><input type="checkbox" data-id="mail-2"><span class="check-label">Shows "No pending items" or empty state when nothing waiting</span></label>
+    <label class="check-item"><input type="checkbox" data-id="mail-3"><span class="check-label">If pending items exist in DB, they display in the list</span></label>
+    <label class="check-item"><input type="checkbox" data-id="mail-4"><span class="check-label">Claim button works — item goes to inventory</span></label>
+    <label class="check-item"><input type="checkbox" data-id="mail-5"><span class="check-label">Claim All button works</span></label>
+    <label class="check-item"><input type="checkbox" data-id="mail-6"><span class="check-label">Mailbox animation plays correctly</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Bridge Service -->
+<div class="section" data-section="bridge">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Bridge Service <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="bridge-1"><span class="check-label"><code>pnpm --filter @starbound-mmo/bridge dev</code> starts without errors</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-2"><span class="check-label">Creates <code>mmo_bridge/commands/</code>, <code>state/</code>, <code>cache/</code> directories</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-3"><span class="check-label">Connects to Neon database (no connection errors)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-4"><span class="check-label">Connects to PartyKit (WebSocket open)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-5"><span class="check-label">Drop a test <code>.json</code> command in <code>mmo_bridge/commands/</code> — gets picked up and deleted</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-6"><span class="check-label">Bridge writes <code>mod/cache/market.json</code> on market updates</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-7"><span class="check-label">Bridge writes <code>mod/cache/player_*.json</code> on player join</span></label>
+    <label class="check-item"><input type="checkbox" data-id="bridge-8"><span class="check-label">Log watcher detects <code>[MMO_CMD]</code> lines in Starbound log</span></label>
+  </div>
+</div>
+
+<!-- SECTION: End-to-End Flow -->
+<div class="section" data-section="e2e">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">End-to-End Flow <span class="section-badge badge-test">TEST</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="e2e-1"><span class="check-label">Start bridge service</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-2"><span class="check-label">Launch Starbound, warp to hub</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-3"><span class="check-label">Open market terminal, create a listing</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-4"><span class="check-label">Bridge picks up the command (check console output)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-5"><span class="check-label">Listing appears in database (<code>pnpm db:studio</code> to check)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-6"><span class="check-label">Listing shows up when re-opening market terminal</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-7"><span class="check-label">Purchase a listing — currency deducted, item goes to pending</span></label>
+    <label class="check-item"><input type="checkbox" data-id="e2e-8"><span class="check-label">Check mailbox — purchased item appears and can be claimed</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Known Broken -->
+<div class="section" data-section="broken">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Known Broken — Needs Code Fix <span class="section-badge badge-critical">BROKEN</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="fix-1"><span class="check-label">Cache loading: <code>root.assetJson()</code> can't read runtime files — need different approach</span></label>
+    <p class="note">marketui.lua and mailboxui.lua both try to read bridge-written cache files as mod assets. Will always fail.</p>
+    <label class="check-item"><input type="checkbox" data-id="fix-2"><span class="check-label"><code>init.lua</code> never runs — not hooked in <code>player.config.patch</code></span></label>
+    <p class="note">Player registration, currency init, and pending item checks on join don't happen.</p>
+    <label class="check-item"><input type="checkbox" data-id="fix-3"><span class="check-label">Player ID confusion: <code>bridge.lua</code> uses <code>player.id()</code> instead of <code>player.uniqueId()</code></span></label>
+    <p class="note">player.id() returns a per-session entity ID. uniqueId() is the persistent one.</p>
+    <label class="check-item"><input type="checkbox" data-id="fix-4"><span class="check-label">Item loss risk: <code>marketui.lua</code> deletes item from inventory before command is confirmed</span></label>
+    <p class="note">setSwapSlotItem(nil) on line 532 happens immediately. If the command fails, item is gone forever.</p>
+    <label class="check-item"><input type="checkbox" data-id="fix-5"><span class="check-label">Expired listings don't return items to seller (no pendingItems created)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="fix-6"><span class="check-label">Presence tracking: <code>conn.id</code> vs <code>playerId</code> mismatch — players never removed from online list</span></label>
+    <label class="check-item"><input type="checkbox" data-id="fix-7"><span class="check-label">Faction member tracking: same <code>conn.id</code> vs <code>playerId</code> bug as presence</span></label>
+    <label class="check-item"><input type="checkbox" data-id="fix-8"><span class="check-label">Bridge <code>factionTag</code> always writes <code>null</code> even when player has a faction</span></label>
+    <label class="check-item"><input type="checkbox" data-id="fix-9"><span class="check-label">Duplicate market message handlers in bridge (index.ts and router.ts both subscribe)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="fix-10"><span class="check-label">No WebSocket reconnection — if PartyKit connection drops, bridge is dead until restart</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Dead Code Cleanup -->
+<div class="section" data-section="dead-code">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Dead Code & Cleanup <span class="section-badge badge-info">CLEANUP</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="dead-1"><span class="check-label"><code>market.lua</code> — never imported, market UI reimplements everything</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-2"><span class="check-label"><code>faction.lua</code> — never imported, no faction UI exists</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-3"><span class="check-label"><code>hubbeacon.lua</code> — dead code, .object uses inline interactData</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-4"><span class="check-label"><code>hubreturn.lua</code> — dead code, .object uses inline interactData</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-5"><span class="check-label"><code>mmo_commandrelay.stagehand</code> — never spawned by any world</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-6"><span class="check-label"><code>mmo_hub_notiles.json</code> — appears to be an unused prototype file</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-7"><span class="check-label">14 <code>"yourstation"</code> placeholder brushes in dungeon file</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-8"><span class="check-label"><code>how_ui_works.txt</code> — reference notes, decide if it stays in repo</span></label>
+    <label class="check-item"><input type="checkbox" data-id="dead-9"><span class="check-label">Remove unused <code>bridge.getCurrency()</code> / <code>getFaction()</code> / <code>getPendingItems()</code> helpers or fix them</span></label>
+  </div>
+</div>
+
+<!-- SECTION: Missing but Needed -->
+<div class="section" data-section="missing">
+  <div class="section-header" onclick="toggleSection(this)">
+    <span class="section-title">Missing for Solid Foundation <span class="section-badge badge-info">NEEDED</span></span>
+    <span class="section-count"></span>
+    <span class="chevron">▶</span>
+  </div>
+  <div class="section-body">
+    <label class="check-item"><input type="checkbox" data-id="need-1"><span class="check-label">Player join flow — something needs to register the player with the bridge on world load</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-2"><span class="check-label">Command confirmation — UI needs feedback when commands succeed or fail</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-3"><span class="check-label">Currency sync — player needs to see their actual balance, not a stale/default value</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-4"><span class="check-label">Error feedback in-game — if bridge is down or command fails, player should know</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-5"><span class="check-label">Listing fee actually charged (5% defined in constants but never deducted in bridge)</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-6"><span class="check-label">Market listing expiration cleanup job</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-7"><span class="check-label">Transaction logging — <code>transactions</code> table exists but nothing writes to it from bridge</span></label>
+    <label class="check-item"><input type="checkbox" data-id="need-8"><span class="check-label">Decide on object placement strategy: dungeon PNG brushes vs stagehand spawner</span></label>
+  </div>
+</div>
+
+</div>
+
+<br>
+<div style="text-align: right;">
+  <button class="reset-btn" onclick="resetAll()">Reset All Checkboxes</button>
+</div>
+
+<script>
+const STORAGE_KEY = 'starbound-mmo-checklist';
+
+function loadState() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function updateProgress() {
+  const all = document.querySelectorAll('input[type="checkbox"]');
+  const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+  const pct = all.length ? (checked.length / all.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressCount').textContent = checked.length + ' / ' + all.length;
+
+  // Update section counts
+  document.querySelectorAll('.section').forEach(sec => {
+    const total = sec.querySelectorAll('input[type="checkbox"]').length;
+    const done = sec.querySelectorAll('input[type="checkbox"]:checked').length;
+    const countEl = sec.querySelector('.section-count');
+    if (countEl) countEl.textContent = done + '/' + total;
+  });
+}
+
+function toggleSection(header) {
+  header.closest('.section').classList.toggle('open');
+}
+
+function resetAll() {
+  if (!confirm('Reset all checkboxes? This cannot be undone.')) return;
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.check-item').classList.remove('checked');
+  });
+  saveState({});
+  updateProgress();
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  const state = loadState();
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+  checkboxes.forEach(cb => {
+    const id = cb.dataset.id;
+    if (state[id]) {
+      cb.checked = true;
+      cb.closest('.check-item').classList.add('checked');
+    }
+    cb.addEventListener('change', () => {
+      const s = loadState();
+      s[id] = cb.checked;
+      saveState(s);
+      cb.closest('.check-item').classList.toggle('checked', cb.checked);
+      updateProgress();
+    });
+  });
+
+  updateProgress();
+});
+</script>
+
+</body>
+</html>

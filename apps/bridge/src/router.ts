@@ -1,5 +1,5 @@
 import { createClient, players, pendingItems } from '@starbound-mmo/db'
-import { eq, sql } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import type { CommandType, CommandData } from '@starbound-mmo/shared'
 import { STARTING_CURRENCY } from '@starbound-mmo/shared'
 import type { PartyKitClient } from './partykit.js'
@@ -13,12 +13,82 @@ type ValidatedCommand<T extends CommandType> = {
   data: CommandData[T]
 }
 
+interface CachedPlayer {
+  id: string
+  starboundId: string
+  displayName: string
+  currency: number
+  factionId: string | null
+  cachedAt: number
+}
+
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
 export function createCommandRouter(
   databaseUrl: string,
   partykit: PartyKitClient,
   stateWriter: StateWriter
 ) {
   const db = createClient(databaseUrl)
+  const playerCache = new Map<string, CachedPlayer>()
+
+  /**
+   * Resolve a starboundId (character UUID from Lua) to a full player record with DB UUID.
+   * Results are cached for 5 minutes.
+   */
+  async function resolvePlayer(starboundId: string): Promise<CachedPlayer | null> {
+    const cached = playerCache.get(starboundId)
+    if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+      return cached
+    }
+
+    const player = await db.query.players.findFirst({
+      where: eq(players.starboundId, starboundId),
+    })
+
+    if (!player) return null
+
+    const entry: CachedPlayer = {
+      id: player.id,
+      starboundId: player.starboundId,
+      displayName: player.displayName,
+      currency: player.currency,
+      factionId: player.factionId,
+      cachedAt: Date.now(),
+    }
+    playerCache.set(starboundId, entry)
+    return entry
+  }
+
+  /**
+   * Attach seller.starboundId to market listings that lack it (older PartyKit deploys
+   * only send seller id + displayName). The in-game UI needs the character UUID to
+   * recognize its own listings.
+   */
+  async function attachSellerStarboundIds(listings: unknown[]): Promise<unknown[]> {
+    type Listing = { sellerId?: string; seller?: { id?: string; displayName?: string; starboundId?: string } }
+    const missing = new Set<string>()
+    for (const raw of listings as Listing[]) {
+      if (raw.seller?.starboundId) continue
+      const sellerId = raw.seller?.id ?? raw.sellerId
+      if (sellerId) missing.add(sellerId)
+    }
+    if (missing.size === 0) return listings
+
+    const rows = await db.query.players.findMany({
+      where: inArray(players.id, Array.from(missing)),
+      columns: { id: true, starboundId: true },
+    })
+    const byId = new Map(rows.map((r) => [r.id, r.starboundId]))
+
+    return (listings as Listing[]).map((raw) => {
+      if (raw.seller?.starboundId) return raw
+      const sellerId = raw.seller?.id ?? raw.sellerId
+      const starboundId = sellerId ? byId.get(sellerId) : undefined
+      if (!starboundId) return raw
+      return { ...raw, seller: { ...(raw.seller ?? { id: sellerId }), starboundId } }
+    })
+  }
 
   async function handleCommand(command: {
     id: string
@@ -64,11 +134,13 @@ export function createCommandRouter(
   }
 
   async function handlePlayerJoin(command: ValidatedCommand<'player_join'>) {
-    const { playerId, data } = command
+    // command.playerId is the starboundId (character UUID from Lua)
+    const starboundId = command.playerId
+    const { data } = command
 
     // Check if player exists
     let player = await db.query.players.findFirst({
-      where: eq(players.starboundId, data.starboundId),
+      where: eq(players.starboundId, starboundId),
     })
 
     if (!player) {
@@ -76,7 +148,7 @@ export function createCommandRouter(
       const [newPlayer] = await db
         .insert(players)
         .values({
-          starboundId: data.starboundId,
+          starboundId,
           displayName: data.displayName,
           currency: STARTING_CURRENCY,
         })
@@ -95,13 +167,23 @@ export function createCommandRouter(
       console.log(`Player rejoined: ${player.displayName}`)
     }
 
+    // Cache the resolved player
+    playerCache.set(starboundId, {
+      id: player.id,
+      starboundId: player.starboundId,
+      displayName: player.displayName,
+      currency: player.currency,
+      factionId: player.factionId,
+      cachedAt: Date.now(),
+    })
+
     // Get pending items for this player
     const pending = await db.query.pendingItems.findMany({
       where: eq(pendingItems.playerId, player.id),
     })
 
     // Write player state file (use starboundId so Lua can read it)
-    await stateWriter.writePlayerState(player.id, data.starboundId, {
+    await stateWriter.writePlayerState(player.id, starboundId, {
       id: player.id,
       displayName: player.displayName,
       currency: player.currency,
@@ -128,17 +210,26 @@ export function createCommandRouter(
   }
 
   async function handlePlayerLeave(command: ValidatedCommand<'player_leave'>) {
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for leave: ${command.playerId}`)
+      return
+    }
     partykit.sendToPresence({
       type: 'leave',
-      playerId: command.playerId,
+      playerId: resolved.id,
     })
   }
 
   async function handleMarketCreate(command: ValidatedCommand<'market_create'>) {
-    // Forward to PartyKit market room
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for market_create: ${command.playerId}`)
+      return
+    }
     partykit.sendToMarket({
       type: 'create_listing',
-      playerId: command.playerId,
+      playerId: resolved.id,
       itemName: command.data.item.name,
       itemCount: command.data.item.count,
       itemParams: command.data.item.parameters,
@@ -147,43 +238,57 @@ export function createCommandRouter(
   }
 
   async function handleMarketPurchase(command: ValidatedCommand<'market_purchase'>) {
-    console.log(`[Router] Processing market purchase: listing ${command.data.listingId} by player ${command.playerId}`)
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for market_purchase: ${command.playerId}`)
+      return
+    }
+    console.log(`[Router] Processing market purchase: listing ${command.data.listingId} by player ${resolved.id}`)
     partykit.sendToMarket({
       type: 'purchase',
-      playerId: command.playerId,
+      playerId: resolved.id,
       listingId: command.data.listingId,
     })
   }
 
   async function handleMarketCancel(command: ValidatedCommand<'market_cancel'>) {
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for market_cancel: ${command.playerId}`)
+      return
+    }
     partykit.sendToMarket({
       type: 'cancel',
-      playerId: command.playerId,
+      playerId: resolved.id,
       listingId: command.data.listingId,
     })
   }
 
   async function handleClaimItem(command: ValidatedCommand<'claim_item'>) {
-    const { playerId, data } = command
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for claim_item: ${command.playerId}`)
+      return
+    }
 
     try {
       // Delete the pending item from database
       const deleted = await db
         .delete(pendingItems)
-        .where(eq(pendingItems.id, data.pendingItemId))
+        .where(eq(pendingItems.id, command.data.pendingItemId))
         .returning()
 
       if (deleted.length > 0) {
-        console.log(`[Router] Claimed item ${data.pendingItemId} for player ${playerId}`)
+        console.log(`[Router] Claimed item ${command.data.pendingItemId} for player ${resolved.id}`)
 
         // Get updated player state and write it
         const player = await db.query.players.findFirst({
-          where: eq(players.id, playerId),
+          where: eq(players.id, resolved.id),
         })
 
         if (player) {
           const remaining = await db.query.pendingItems.findMany({
-            where: eq(pendingItems.playerId, playerId),
+            where: eq(pendingItems.playerId, resolved.id),
           })
 
           await stateWriter.writePlayerState(player.id, player.starboundId, {
@@ -206,7 +311,7 @@ export function createCommandRouter(
           console.log(`[Router] Updated player state: ${remaining.length} items remaining`)
         }
       } else {
-        console.warn(`[Router] Pending item not found: ${data.pendingItemId}`)
+        console.warn(`[Router] Pending item not found: ${command.data.pendingItemId}`)
       }
     } catch (error) {
       console.error('[Router] Error claiming item:', error)
@@ -214,45 +319,57 @@ export function createCommandRouter(
   }
 
   async function handleFactionCreate(command: ValidatedCommand<'faction_create'>) {
-    // Use the lobby faction room for creation
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for faction_create: ${command.playerId}`)
+      return
+    }
     partykit.sendToFaction('lobby', {
       type: 'create_faction',
-      playerId: command.playerId,
+      playerId: resolved.id,
       name: command.data.name,
       tag: command.data.tag,
     })
   }
 
   async function handleFactionJoin(command: ValidatedCommand<'faction_join'>) {
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for faction_join: ${command.playerId}`)
+      return
+    }
     partykit.sendToFaction(command.data.factionId, {
       type: 'join_request',
-      playerId: command.playerId,
+      playerId: resolved.id,
     })
   }
 
   async function handleFactionLeave(command: ValidatedCommand<'faction_leave'>) {
-    // Get player's current faction
-    const player = await db.query.players.findFirst({
-      where: eq(players.id, command.playerId),
-    })
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for faction_leave: ${command.playerId}`)
+      return
+    }
 
-    if (player?.factionId) {
-      partykit.sendToFaction(player.factionId, {
+    if (resolved.factionId) {
+      partykit.sendToFaction(resolved.factionId, {
         type: 'leave',
-        playerId: command.playerId,
+        playerId: resolved.id,
       })
     }
   }
 
   async function handleFactionDeposit(command: ValidatedCommand<'faction_deposit'>) {
-    const player = await db.query.players.findFirst({
-      where: eq(players.id, command.playerId),
-    })
+    const resolved = await resolvePlayer(command.playerId)
+    if (!resolved) {
+      console.warn(`[Router] Unknown player for faction_deposit: ${command.playerId}`)
+      return
+    }
 
-    if (player?.factionId) {
-      partykit.sendToFaction(player.factionId, {
+    if (resolved.factionId) {
+      partykit.sendToFaction(resolved.factionId, {
         type: 'deposit',
-        playerId: command.playerId,
+        playerId: resolved.id,
         amount: command.data.amount,
       })
     }
@@ -314,13 +431,13 @@ export function createCommandRouter(
             })),
             notifications: [{
               id: `purchase-${message.listing.id}`,
-              type: 'market_purchase',
+              type: 'success',
               message: `Purchased ${message.listing.itemCount}x ${message.listing.itemName}`,
               createdAt: new Date().toISOString(),
             }],
           })
 
-          console.log(`Updated buyer state for ${buyer.displayName}: ${buyer.currency} CR, ${buyerPendingItems.length} pending items`)
+          console.log(`Updated buyer state for ${buyer.displayName}: ${buyer.currency} PX, ${buyerPendingItems.length} pending items`)
         }
       } catch (error) {
         console.error('Error updating buyer state:', error)
@@ -357,13 +474,13 @@ export function createCommandRouter(
             })),
             notifications: [{
               id: `sale-${message.listing.id}`,
-              type: 'market_sale',
-              message: `Sold ${message.listing.itemCount}x ${message.listing.itemName} for ${message.listing.totalPrice} CR`,
+              type: 'success',
+              message: `Sold ${message.listing.itemCount}x ${message.listing.itemName} for ${message.listing.totalPrice} PX`,
               createdAt: new Date().toISOString(),
             }],
           })
 
-          console.log(`Updated seller state for ${seller.displayName}: ${seller.currency} CR`)
+          console.log(`Updated seller state for ${seller.displayName}: ${seller.currency} PX`)
         }
       } catch (error) {
         console.error('Error updating seller state:', error)
@@ -371,5 +488,5 @@ export function createCommandRouter(
     }
   })
 
-  return { handleCommand }
+  return { handleCommand, attachSellerStarboundIds }
 }

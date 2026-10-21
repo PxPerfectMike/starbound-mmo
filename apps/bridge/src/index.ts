@@ -54,8 +54,9 @@ async function main() {
     const message = data as { type: string; listings?: unknown[] }
 
     if (message.type === 'sync' && message.listings) {
-      // Initial sync - write all listings to cache
-      await stateWriter.writeMarketCache(message.listings)
+      // Initial sync - write all listings to cache (with seller character UUIDs attached)
+      const listings = await router.attachSellerStarboundIds(message.listings)
+      await stateWriter.writeMarketCache(listings)
       console.log(`Market cache updated: ${message.listings.length} listings`)
     } else if (
       message.type === 'listing_added' ||

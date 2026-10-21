@@ -1,6 +1,6 @@
 // Currency Configuration
-export const CURRENCY_NAME = 'Credits'
-export const CURRENCY_SYMBOL = 'CR'
+export const CURRENCY_NAME = 'Pixels'
+export const CURRENCY_SYMBOL = 'PX'
 export const STARTING_CURRENCY = 1000
 export const LISTING_FEE_PERCENT = 5
 export const LISTING_DURATION_DAYS = 7

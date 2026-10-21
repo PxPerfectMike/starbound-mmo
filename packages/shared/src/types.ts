@@ -83,7 +83,8 @@ export interface MarketListing {
 }
 
 export interface MarketListingWithSeller extends MarketListing {
-  seller: Pick<Player, 'id' | 'displayName'>
+  // starboundId lets the in-game UI match listings to the local character
+  seller: Pick<Player, 'id' | 'displayName'> & { starboundId?: string }
 }
 
 // Transaction Types
@@ -118,7 +119,6 @@ export interface BridgeCommand<T extends CommandType = CommandType> {
 
 export interface CommandData {
   player_join: {
-    starboundId: string
     displayName: string
   }
   player_leave: Record<string, never>

@@ -48,8 +48,14 @@ local function removeFromAllListings(listingId)
   applySearchFilter()
 end
 
--- Send command via the terminal object
-local function sendViaTerminal(command)
+-- In-flight entity messages. Each entry: { promise, onSuccess, onFailure }.
+-- world.sendEntityMessage is asynchronous: the RpcPromise resolves on a later tick,
+-- so results are checked in update() rather than immediately.
+local pendingRpcs = {}
+
+-- Send command via the terminal object. Returns true if the message was dispatched;
+-- onSuccess / onFailure run once the terminal object acknowledges (or the RPC fails).
+local function sendViaTerminal(command, onSuccess, onFailure)
   if not terminalEntityId then
     terminalEntityId = pane.sourceEntity()
   end
@@ -59,11 +65,26 @@ local function sendViaTerminal(command)
     return false
   end
 
-  local result = world.sendEntityMessage(terminalEntityId, "mmo_command", command)
-  if result:finished() and result:succeeded() then
-    return true
+  local promise = world.sendEntityMessage(terminalEntityId, "mmo_command", command)
+  table.insert(pendingRpcs, { promise = promise, onSuccess = onSuccess, onFailure = onFailure })
+  return true
+end
+
+local function processPendingRpcs()
+  for i = #pendingRpcs, 1, -1 do
+    local entry = pendingRpcs[i]
+    if entry.promise:finished() then
+      table.remove(pendingRpcs, i)
+      local result = entry.promise:succeeded() and entry.promise:result() or nil
+      if entry.promise:succeeded() and type(result) == "table" and result.success then
+        if entry.onSuccess then entry.onSuccess(result) end
+      else
+        local err = entry.promise:succeeded() and (result and result.error) or entry.promise:error()
+        sb.logWarn("[MMO Market] Command failed: " .. tostring(err))
+        if entry.onFailure then entry.onFailure(err) end
+      end
+    end
   end
-  return true -- Assume async will work
 end
 
 function init()
@@ -87,8 +108,6 @@ function init()
     playerState = loadPlayerState()
     if playerState then
       playerStateLoaded = true
-    else
-      sendPlayerJoinCommand()
     end
 
     switchToBrowse()
@@ -110,6 +129,8 @@ function update(dt)
     pane.dismiss()
     return
   end
+
+  processPendingRpcs()
 
   -- Check for player state if not loaded
   if not playerStateLoaded then
@@ -160,6 +181,9 @@ function refreshMarketCache()
 end
 
 function loadMarketCache()
+  -- root.assetJson() reads from the asset tree loaded at startup.
+  -- Files written by the bridge at runtime won't be visible until restart.
+  -- Market listings are maintained in-memory during the session and updated optimistically.
   local success, data = pcall(function()
     return root.assetJson("/cache/market.json")
   end)
@@ -174,33 +198,13 @@ function loadMarketCache()
 end
 
 function loadPlayerState()
-  if not starboundId then return nil end
+  if not player.getProperty("mmo_character") then return nil end
 
-  local success, data = pcall(function()
-    return root.assetJson("/cache/player_" .. starboundId .. ".json")
-  end)
-
-  if success and data and type(data) == "table" and data.currency then
-    return data
-  end
-  return nil
-end
-
-function sendPlayerJoinCommand()
-  if not starboundId or not playerName then return end
-
-  local command = {
-    id = generateId(),
-    type = "player_join",
-    playerId = starboundId,
-    timestamp = os.time(),
-    data = {
-      starboundId = starboundId,
-      displayName = playerName
-    }
+  return {
+    id = starboundId or player.uniqueId(),
+    currency = player.getProperty("mmo_currency") or 0,
+    displayName = playerName or "Unknown"
   }
-
-  sendViaTerminal(command)
 end
 
 function updateCurrencyDisplay()
@@ -391,11 +395,15 @@ end
 -- My Listings
 function updateMyListings()
   myListings = {}
-  if not playerState or not playerState.id then return end
+  if not starboundId then return end
 
+  -- listing.sellerId is the database UUID; the character UUID lives on seller.starboundId
   for _, listing in ipairs(allListings) do
-    local sellerId = listing.sellerId or listing.seller_id
-    if sellerId == playerState.id then
+    local sellerStarboundId = listing.sellerStarboundId
+    if not sellerStarboundId and type(listing.seller) == "table" then
+      sellerStarboundId = listing.seller.starboundId or listing.seller.starbound_id
+    end
+    if sellerStarboundId == starboundId then
       table.insert(myListings, listing)
     end
   end
@@ -505,7 +513,7 @@ function onPriceChanged()
 end
 
 function createListing()
-  if not playerState or not playerState.id then
+  if not playerState then
     widget.setText("createStatus", "^red;Not registered!^reset;")
     return
   end
@@ -524,32 +532,51 @@ function createListing()
   end
 
   local durationOption = DURATION_OPTIONS[selectedDuration]
+  local itemDescriptor = {
+    name = selectedItem.name,
+    count = selectedItem.count or 1,
+    parameters = selectedItem.parameters or {}
+  }
 
   local command = {
     id = generateId(),
     type = "market_create",
-    playerId = playerState.id,
+    playerId = starboundId,
     timestamp = os.time(),
     data = {
-      item = {
-        name = selectedItem.name,
-        count = selectedItem.count or 1,
-        parameters = selectedItem.parameters or {}
-      },
+      item = itemDescriptor,
       pricePerUnit = pricePerUnit,
-      durationSeconds = durationOption.seconds
+      durationSeconds = durationOption.seconds,
+      sellerName = playerName
     }
   }
 
-  if sendViaTerminal(command) then
-    -- Clear the swap slot and item slot
-    player.setSwapSlotItem(nil)
-    -- itemSlot removed
-    widget.setText("createStatus", "^green;Auction created!^reset;")
+  -- Escrow: save item to player properties before consuming. The property stays set
+  -- until the terminal acknowledges the command. If the game crashes or the RPC fails,
+  -- the item is restored (mmo_player.lua recovers it on next login after a crash).
+  player.setProperty("mmo_escrowed_item", itemDescriptor)
+  player.setSwapSlotItem(nil)
+
+  local function restoreItem(reason)
+    player.giveItem(itemDescriptor)
+    player.setProperty("mmo_escrowed_item", nil)
+    widget.setText("createStatus", "^red;Failed to create auction^reset; ^gray;(item returned)^reset;")
+    sb.logWarn("[MMO Market] Listing not created, item returned: " .. tostring(reason))
+  end
+
+  local dispatched = sendViaTerminal(command,
+    function()
+      player.setProperty("mmo_escrowed_item", nil)
+      widget.setText("createStatus", "^green;Auction created!^reset;")
+    end,
+    restoreItem)
+
+  if dispatched then
+    widget.setText("createStatus", "^yellow;Creating auction...^reset;")
     selectedItem = nil
     updateSelectedItemDisplay()
   else
-    widget.setText("createStatus", "^red;Failed to create auction^reset;")
+    restoreItem("no terminal entity")
   end
 end
 
@@ -572,7 +599,7 @@ function cancelListing(index)
   local command = {
     id = generateId(),
     type = "market_cancel",
-    playerId = playerState.id,
+    playerId = starboundId,
     timestamp = os.time(),
     data = {
       listingId = listingId
@@ -610,31 +637,56 @@ function buyListing(displayIndex)
 
   if not listingId then return end
 
-  if playerState and playerState.currency then
-    local price = listing.totalPrice or listing.total_price or 0
-    if playerState.currency < price then
-      widget.setText("statusLabel", "^red;Insufficient funds!^reset;")
-      return
-    end
+  local price = listing.totalPrice or listing.total_price or 0
+  local currentBalance = player.getProperty("mmo_currency") or 0
+
+  if currentBalance < price then
+    widget.setText("statusLabel", "^red;Insufficient funds!^reset;")
+    return
   end
 
   local command = {
     id = generateId(),
     type = "market_purchase",
-    playerId = playerState.id,
+    playerId = starboundId,
     timestamp = os.time(),
     data = {
-      listingId = listingId
+      listingId = listingId,
+      buyerName = playerName
     }
   }
 
-  if sendViaTerminal(command) then
+  local function refund(reason)
+    -- Undo the optimistic deduction and put the listing back
+    local balance = (player.getProperty("mmo_currency") or 0) + price
+    player.setProperty("mmo_currency", balance)
+    if playerState then playerState.currency = balance end
+    updateCurrencyDisplay()
+    table.insert(allListings, 1, listing)
+    applySearchFilter()
+    displayBrowseListings()
+    widget.setText("statusLabel", "^red;Purchase failed^reset; ^gray;(pixels refunded)^reset;")
+    sb.logWarn("[MMO Market] Purchase not sent, refunded: " .. tostring(reason))
+  end
+
+  local dispatched = sendViaTerminal(command,
+    function()
+      widget.setText("statusLabel", "^green;Purchase sent! Check your mailbox.^reset;")
+    end,
+    refund)
+
+  if dispatched then
+    -- Deduct currency optimistically; refunded if the terminal rejects the command
+    local newBalance = currentBalance - price
+    player.setProperty("mmo_currency", newBalance)
+    if playerState then playerState.currency = newBalance end
+    updateCurrencyDisplay()
+
     widget.setText("statusLabel", "^yellow;Purchasing...^reset;")
-    -- Optimistically remove from display
     removeFromAllListings(listingId)
     displayBrowseListings()
   else
-    widget.setText("statusLabel", "^red;Not registered!^reset;")
+    widget.setText("statusLabel", "^red;Failed to purchase!^reset;")
   end
 end
 
